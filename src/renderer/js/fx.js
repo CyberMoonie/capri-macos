@@ -264,8 +264,8 @@ export class FxLayer {
 
   // Showing you something: a lock-on reticle that slams onto `rect`, a dashed wire from her
   // fingertip (`from`, a function) to `aim` with data running down it, two of her eyes opening
-  // on the reticle's corners, and a word on a tag. When `rect` is off her screen (the tray, down
-  // in the taskbar), an arrow on the edge points the rest of the way.
+  // on the reticle's corners, and a word on a tag. When `rect` is off her screen (her icon, up
+  // in the menu bar), an arrow on the edge points the rest of the way.
   // Handle: tap() (she jabs at it: the reticle pulses), retract() (the wire reels back into her
   // finger, the reticle lets go), fade().
   pointer(from, rect, aim, { label = '' } = {}) {

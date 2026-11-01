@@ -1,51 +1,17 @@
 'use strict';
 
-// Closing an app when you ask her to (chat.js), after you've confirmed with a click. The apps with
-// a window, by name; closing one the way its own close button does (it can still ask you to save),
-// and only if you ask again, forcing it. On a Mac: the apps in the Dock, closed like Cmd+Q.
+// Closing an app when you ask her to (chat.js), after you've confirmed with a click. The apps in the
+// Dock, by name; closing one like Cmd+Q does (it can still ask you to save), and only if you ask
+// again, forcing it.
 
-const { execFile } = require('node:child_process');
 const mac = require('./mac');
 
-// never these: the desktop itself, Windows' own pieces, her (Capri), Claude (she watches it) and
-// Ollama (she talks through it)
-const KEEP = new Set([
-  'explorer', 'applicationframehost', 'textinputhost', 'shellexperiencehost', 'startmenuexperiencehost',
-  'searchhost', 'searchapp', 'lockapp', 'dwm', 'capri', 'electron', 'claude', 'codex', 'ollama', 'ollama app',
-  'finder', // the Mac's own
-]);
+// never these: Finder, her (Capri), Claude (she watches it) and Ollama (she talks through it)
+const KEEP = new Set(['finder', 'capri', 'electron', 'claude', 'codex', 'ollama']);
 
-function powershell(script, timeout = 15000) {
-  return new Promise((resolve, reject) => {
-    execFile('powershell.exe', [
-      '-NoProfile', '-NonInteractive', '-Command',
-      `[Console]::OutputEncoding = [Text.Encoding]::UTF8; ${script}`,
-    ], { windowsHide: true, timeout }, (err, out) => (err ? reject(err) : resolve(out.trim())));
-  });
-}
-
-// [{ name, process, ids }]: one per program with a window open ("AM Music", "Discord"...)
+// [{ name, process, label, ids }]: one per app in the Dock ("Spotify", "Discord"...), not the
+// background helpers
 async function list() {
-  if (mac.MAC) return macList();
-  if (process.platform !== 'win32') return [];
-  const out = await powershell(
-    'Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle } | '
-    + 'ForEach-Object { [pscustomobject]@{ id = $_.Id; name = $_.ProcessName; label = $_.Description } } | '
-    + 'ConvertTo-Json -Compress',
-  );
-  const rows = [].concat(out ? JSON.parse(out) : []);
-  const apps = new Map();
-  for (const { id, name, label } of rows) {
-    if (id === process.pid || KEEP.has(name.toLowerCase())) continue;
-    const app = apps.get(name) || { name, process: name, label: label || '', ids: [] };
-    app.ids.push(id);
-    apps.set(name, app);
-  }
-  return [...apps.values()];
-}
-
-// The apps in the Dock (not the background helpers), by the name macOS shows.
-async function macList() {
   const rows = await mac.helperJson(['apps']);
   const apps = new Map();
   for (const { pid, name } of rows) {
@@ -59,7 +25,7 @@ async function macList() {
 
 const simple = (text) => String(text || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 
-// The open app that `wanted` names, by its name or its description ("am music", "YouTube Music").
+// The open app that `wanted` names, by its name ("discord", "Apple Music").
 async function find(wanted) {
   const key = simple(wanted);
   if (key.length < 2) return null;
@@ -75,23 +41,13 @@ async function find(wanted) {
   return best ? best[1] : null;
 }
 
-// Closes it like its close button would; `force` ends it outright (unsaved work is lost).
-// Resolves with what's left: { running } (true when it stayed open, or hid in the tray).
+// Quits it like Cmd+Q would; `force` ends it outright (unsaved work is lost).
+// Resolves with what's left: { running } (true when it stayed open, asking to save something say).
 async function close(name, { force = false } = {}) {
   const app = (await list()).find((a) => a.process === name);
   if (!app) return { running: false };
-  if (mac.MAC) {
-    const left = await mac.helper(['quit', ...(force ? ['--force'] : []), ...app.ids.map(String)], 15000);
-    return { running: Number(left) > 0 };
-  }
-  const ids = app.ids.join(',');
-  const out = await powershell(force
-    ? `Stop-Process -Id ${ids} -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 600; `
-      + `@(Get-Process -Id ${ids} -ErrorAction SilentlyContinue).Count`
-    : `foreach ($p in @(Get-Process -Id ${ids} -ErrorAction SilentlyContinue)) { [void]$p.CloseMainWindow() }; `
-      + 'Start-Sleep -Milliseconds 2500; '
-      + `@(Get-Process -Name '${name.replace(/'/g, "''")}' -ErrorAction SilentlyContinue).Count`);
-  return { running: Number(out) > 0 };
+  const left = await mac.helper(['quit', ...(force ? ['--force'] : []), ...app.ids.map(String)], 15000);
+  return { running: Number(left) > 0 };
 }
 
-module.exports = { list, find, close, powershell };
+module.exports = { list, find, close };

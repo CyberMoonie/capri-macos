@@ -1,16 +1,13 @@
 'use strict';
 
-// Finding your files when you ask her ("trouve mon CV", "where's my report"). Windows' search
-// index (Spotlight on a Mac) first: your whole user folder, by name and by what's in the files, in a
-// blink. If it's off, a walk through your usual folders, by name. Then a screenshot when you ask for one.
+// Finding your files when you ask her ("trouve mon CV", "where's my report"). Spotlight first: your
+// whole user folder, by name and by what's in the files, in a blink. If it's off, a walk through your
+// usual folders, by name. Then a screenshot when you ask for one.
 
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { app, shell, desktopCapturer, screen } = require('electron');
-const { powershell } = require('./apps');
-
-const MAC = process.platform === 'darwin';
 
 const LIMIT = 8;
 const found = new Set(); // what a search showed you: the only paths she opens from here
@@ -18,40 +15,12 @@ const found = new Set(); // what a search showed you: the only paths she opens f
 const words = (query) => String(query || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
   .split(/[^\p{L}\p{N}.]+/u).filter((w) => w.length >= 2).slice(0, 5);
 
-// never in the results: code dependencies, app data, git internals
-const JUNK = ['node_modules', '\\AppData\\', '\\.git\\', '\\site-packages\\', '\\$Recycle.Bin\\'];
-// on a Mac: apps' data in ~/Library (not iCloud Drive nor the cloud folders there), hidden folders
-const MAC_JUNK = /\/node_modules\/|\/site-packages\/|\/\.[^/]+\/|\/Library\/(?!Mobile Documents\/|CloudStorage\/)/;
-const junk = (p) => (MAC ? MAC_JUNK.test(p) : JUNK.some((j) => p.includes(j)));
+// never in the results: code dependencies, apps' data in ~/Library (not iCloud Drive nor the cloud
+// folders there), hidden folders (git internals and the like)
+const JUNK = /\/node_modules\/|\/site-packages\/|\/\.[^/]+\/|\/Library\/(?!Mobile Documents\/|CloudStorage\/)/;
+const junk = (p) => JUNK.test(p);
 // files that are code, left out of a search by what's inside (any word shows up in some library)
 const CODE = ['js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'json', 'map', 'lock', 'yml', 'yaml', 'py', 'css', 'html', 'md', 'txt', 'xml', 'log'];
-
-// Windows Search: names first (every word in the name, of one of `exts` if any), then what's in
-// documents (not code). null if the index can't be asked.
-async function indexed(terms, exts) {
-  const safe = terms.map((t) => t.replace(/[^\p{L}\p{N}.]/gu, '')).filter(Boolean);
-  const types = exts.map((e) => e.replace(/[^a-z0-9]/gi, '')).filter(Boolean);
-  if (!safe.length && !types.length) return [];
-  const scope = `file:${app.getPath('home')}`; // backslashes: with slashes the index finds nothing
-  const notJunk = "NOT System.ItemUrl LIKE '%node_modules%' AND NOT System.ItemUrl LIKE '%/AppData/%' AND NOT System.ItemUrl LIKE '%/.git/%'";
-  const ofType = types.length ? `(${types.map((e) => `System.FileExtension = '.${e}'`).join(' OR ')})` : '';
-  const byName = [...safe.map((t) => `System.FileName LIKE '%${t}%'`), ofType].filter(Boolean).join(' AND ');
-  const byText = safe.length && !types.length
-    ? `CONTAINS(*, '${safe.map((t) => `"${t}"`).join(' AND ')}') AND ${CODE.map((e) => `System.FileExtension <> '.${e}'`).join(' AND ')}`
-    : '';
-  // ItemUrl (file:C:/Users/…): the real path. ItemPathDisplay is translated (C:\Utilisateurs\…\Bureau)
-  const query = (where) => `SELECT TOP ${LIMIT} System.ItemUrl FROM SYSTEMINDEX WHERE SCOPE='${scope}' AND ${notJunk} AND ${where} ORDER BY System.DateModified DESC`;
-  const script = [
-    '$c = New-Object -ComObject ADODB.Connection',
-    "$c.Open(\"Provider=Search.CollatorDSO;Extended Properties='Application=Windows';\")",
-    // each query in a single-quoted PowerShell string (its own quotes doubled)
-    ...[byName, byText].filter(Boolean).map((w) => `$r = New-Object -ComObject ADODB.Recordset; $r.Open('${query(w).replace(/'/g, "''")}', $c); while (-not $r.EOF) { $r.Fields.Item('System.ItemUrl').Value; $r.MoveNext() }; $r.Close()`),
-  ].join('; ');
-  const out = await powershell(script, 10000).catch(() => null);
-  if (out == null) return null;
-  const paths = out.split(/\r?\n/).map((l) => l.trim()).filter((l) => /^file:/i.test(l));
-  return [...new Set(paths.map((l) => decodeURIComponent(l.slice(5)).replace(/\//g, '\\')))];
-}
 
 // Spotlight, the Mac's index: names first (every word in the name, of one of `exts` if any), then
 // what's in documents (not code), the newest first. null if it can't be asked.
@@ -93,19 +62,15 @@ async function spotlight(terms, exts) {
 // The walk, when the index isn't there: your usual folders, a few levels down, by name and type.
 function walked(terms, exts) {
   const roots = ['desktop', 'documents', 'downloads', 'pictures', 'music', 'videos'].map((k) => app.getPath(k));
-  const onedrive = process.env.OneDrive;
-  if (onedrive) roots.push(onedrive);
-  if (MAC) {
-    // iCloud Drive, and the cloud folders (Dropbox, OneDrive, Google Drive…)
-    const library = path.join(app.getPath('home'), 'Library');
-    roots.push(path.join(library, 'Mobile Documents', 'com~apple~CloudDocs'));
-    try {
-      for (const e of fs.readdirSync(path.join(library, 'CloudStorage'), { withFileTypes: true })) {
-        if (e.isDirectory()) roots.push(path.join(library, 'CloudStorage', e.name));
-      }
-    } catch {
-      // none
+  // iCloud Drive, and the cloud folders (Dropbox, OneDrive, Google Drive…)
+  const library = path.join(app.getPath('home'), 'Library');
+  roots.push(path.join(library, 'Mobile Documents', 'com~apple~CloudDocs'));
+  try {
+    for (const e of fs.readdirSync(path.join(library, 'CloudStorage'), { withFileTypes: true })) {
+      if (e.isDirectory()) roots.push(path.join(library, 'CloudStorage', e.name));
     }
+  } catch {
+    // none
   }
   const hits = [];
   const queue = roots.map((dir) => [dir, 0]);
@@ -136,7 +101,7 @@ function walked(terms, exts) {
 async function search({ query = '', exts = [] } = {}) {
   const terms = words(query);
   if (!terms.length && !exts.length) return [];
-  const paths = await (MAC ? spotlight(terms, exts) : indexed(terms, exts));
+  const paths = await spotlight(terms, exts);
   const results = listed(paths?.length ? paths : walked(terms, exts));
   return results.length || !paths?.length ? results : listed(walked(terms, exts));
 }
@@ -166,7 +131,7 @@ async function open(file, { reveal = false } = {}) {
   if (err) throw new Error(err);
 }
 
-// Where a Mac saves screenshots: where you set it (Screenshot › Options), else the desktop.
+// Where your Mac saves screenshots: where you set it (Screenshot › Options), else the desktop.
 function macShots() {
   return new Promise((resolve) => {
     execFile('defaults', ['read', 'com.apple.screencapture', 'location'], { timeout: 3000 }, (err, out) => {
@@ -176,8 +141,8 @@ function macShots() {
   });
 }
 
-// A screenshot of the screen she's on, full size, saved in Pictures › Screenshots (made if needed),
-// or on a Mac where its own screenshots go. `where`: that folder, 'desktop' or its name.
+// A screenshot of the screen she's on, full size, saved where your Mac's own screenshots go.
+// `where`: 'desktop', or that folder's name.
 async function screenshot(display) {
   const d = display || screen.getPrimaryDisplay();
   const k = d.scaleFactor || 1;
@@ -185,7 +150,7 @@ async function screenshot(display) {
   const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: size });
   const src = sources.find((s) => s.display_id === String(d.id)) || sources[0];
   if (!src || src.thumbnail.isEmpty()) throw new Error('no picture of the screen');
-  const dir = MAC ? await macShots() : path.join(app.getPath('pictures'), 'Screenshots');
+  const dir = await macShots();
   fs.mkdirSync(dir, { recursive: true });
   const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
   const file = path.join(dir, `Capri ${stamp}.png`);

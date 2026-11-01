@@ -27,20 +27,19 @@ const DEFAULTS = {
   memories: [],      // things you asked her to remember (her chat)
   claudeMode: 'default', // Claude Code's permission mode in her chat: 'default' only reads, 'acceptEdits' edits without asking
   claude: true,      // she watches Claude Code (off: she just keeps you company, no word of it)
-  rest: 'corner',    // where she rests when nothing's going on: 'corner', or 'taskbar' (sitting on it)
-  motion: 'auto',    // her animations: 'auto' (like Windows' animation effects), 'full' or 'reduced'
-  motionAsked: false, // she asked once, Windows' animations being off, whether to move anyway
-  render: 'auto',   // how her window is drawn: 'auto', 'gl' (OpenGL) or 'software' (no graphics card), for PCs that show it black
+  rest: 'corner',    // where she rests when nothing's going on: 'corner', or 'dock' (standing on the Dock while it shows)
+  motion: 'auto',    // her animations: 'auto' (like macOS's Reduce motion), 'full' or 'reduced'
+  motionAsked: false, // she asked once, Reduce motion being on, whether to move anyway
   follow: true,      // with several screens, she follows the pointer to the one you're on
   jealous: true,     // she gets jealous when she sees you on another AI (bond.js)
   reminders: [],     // the reminders she keeps: [{ id, at, text, made }] (reminders.js)
   bond: null,        // how close she is to you: { xp, first, last, days, streak, caps } (bond.js)
-  pcReact: true,     // she reacts to your PC: the processor at full tilt, the battery, the network, a USB stick, a game (pc.js)
+  pcReact: true,     // she reacts to your Mac: the processor at full tilt, the battery, the network, a USB stick, a game (pc.js)
   musicApp: 'youtube', // where a song you ask for plays: 'youtube' (your browser) or 'spotify'
   gameMode: 'hide',  // a game in front: 'hide' (her window gone until you stop playing) or 'chip' (small, in her corner)
   watchScreen: false, // she looks at your screen now and then and says something about it (look.js)
   lookAsked: false,  // she told you what looking means (where the picture goes) and you said yes
-  screenAsked: false, // macOS asked you once to let her see the screen (after that, she opens its settings)
+  screenAsked: false, // macOS asked you once to let her see the screen (after that, she says what to allow)
 };
 
 let cache = null;

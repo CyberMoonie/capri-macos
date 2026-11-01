@@ -47,7 +47,7 @@ function configure(uninstall = false) {
     if (!settings.hooks[event].length) delete settings.hooks[event];
   }
   const script = path.resolve(__dirname, '..', 'hooks', MARK)
-    .replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`).replace(/\\/g, '/');
+    .replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
   const command = `node "${script}"`;
   if (!uninstall) {
     for (const event of EVENTS) {

@@ -855,7 +855,7 @@ html[data-motion='reduced'] .panel__bar {
 
 /* ---------- reduced motion ---------- */
 
-/* Windows' animation effects off, or her menu › Animations › Reduced (app.js sets data-motion) */
+/* macOS's Reduce motion on, or her menu › Animations › Reduced (app.js sets data-motion) */
 html[data-motion='reduced'] .panel.is-entering .panel__frame,
 html[data-motion='reduced'] .panel.is-leaving .panel__frame,
 html[data-motion='reduced'] .panel__face img,

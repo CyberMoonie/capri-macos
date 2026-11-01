@@ -1,10 +1,8 @@
 'use strict';
 
-// Setting her up with buttons, so nobody has to type in a terminal: Ollama (installed with winget,
-// or on a Mac its own app from ollama.com, woken up, a model fetched with its progress), an API key
-// pasted in her panel (kept encrypted with your Windows account, or in your Mac's keychain), and
-// Claude Code or Codex run through Ollama in a window of their own. Windows and macOS; elsewhere the
-// buttons open the right pages instead.
+// Setting her up with buttons, so nobody has to type in a terminal: Ollama (its app from ollama.com,
+// woken up, a model fetched with its progress), an API key pasted in her panel (kept in your Mac's
+// keychain), and Claude Code or Codex run through Ollama in a Terminal window of their own.
 
 const fs = require('node:fs');
 const os = require('node:os');
@@ -14,10 +12,8 @@ const { safeStorage } = require('electron');
 const ollama = require('./ollama');
 const mac = require('./mac');
 
-const WIN = process.platform === 'win32';
-const MAC = process.platform === 'darwin';
-// Ollama's app for Macs, as its site hands it out (signed by its makers, checked before it goes in)
-const OLLAMA_MAC = 'https://ollama.com/download/Ollama-darwin.zip';
+// Ollama's app, as its site hands it out (signed by its makers, checked before it goes in)
+const OLLAMA_ZIP = 'https://ollama.com/download/Ollama-darwin.zip';
 
 // The models she offers for her chat, with what they weigh (as Ollama lists them)
 const MODELS = [
@@ -36,43 +32,37 @@ const KEY_PAGES = {
 };
 
 async function which(cmd) {
-  await mac.pathReady(); // on a Mac, the PATH your shell gives
+  await mac.pathReady(); // the PATH your shell gives
   return new Promise((resolve) => {
-    execFile(WIN ? 'where.exe' : 'which', [cmd], { windowsHide: true, timeout: 5000 }, (err, out) => (
+    execFile('which', [cmd], { timeout: 5000 }, (err, out) => (
       resolve(err ? null : String(out).split(/\r?\n/)[0].trim() || null)));
   });
 }
 
-// Ollama's own app (it runs the server from the tray) and its command, where its installer puts them
+// Ollama's own app (it runs the server from the menu bar) and its command, in Applications
 function ollamaFiles() {
-  if (MAC) {
-    const app = [path.join('/Applications', 'Ollama.app'), path.join(os.homedir(), 'Applications', 'Ollama.app')]
-      .find((p) => fs.existsSync(p)) || path.join('/Applications', 'Ollama.app');
-    return { app, cli: path.join(app, 'Contents', 'Resources', 'ollama') };
-  }
-  const dir = path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'Programs', 'Ollama');
-  return { app: path.join(dir, 'ollama app.exe'), cli: path.join(dir, 'ollama.exe') };
+  const app = [path.join('/Applications', 'Ollama.app'), path.join(os.homedir(), 'Applications', 'Ollama.app')]
+    .find((p) => fs.existsSync(p)) || path.join('/Applications', 'Ollama.app');
+  return { app, cli: path.join(app, 'Contents', 'Resources', 'ollama') };
 }
 
-// { running, installed, models, winget }: how far along Ollama is on this PC. `winget`: she can
-// install it herself (with winget on Windows; on a Mac, always).
+// { running, installed, models }: how far along Ollama is on this Mac
 async function ollamaState() {
   const models = await ollama.models().catch(() => null);
-  if (models) return { running: true, installed: true, models, winget: false };
-  const [onPath, winget] = await Promise.all([which('ollama'), WIN ? which('winget') : null]);
-  const installed = fs.existsSync(ollamaFiles().cli) || (MAC && fs.existsSync(ollamaFiles().app)) || Boolean(onPath);
-  return { running: false, installed, models: null, winget: MAC || Boolean(winget) };
+  if (models) return { running: true, installed: true, models };
+  const installed = fs.existsSync(ollamaFiles().app) || Boolean(await which('ollama'));
+  return { running: false, installed, models: null };
 }
 
-// On a Mac: Ollama's app from its site, unpacked, checked (signed by its makers, approved by Apple),
-// and put in Applications (yours, if you can't write in the shared one).
-async function installOllamaMac(onLine) {
+// Installs Ollama: its app from its site, unpacked, checked (signed by its makers, approved by Apple),
+// and put in Applications (yours, if you can't write in the shared one). onLine(text): how it goes.
+async function installOllama(onLine) {
   const run = (file, args) => new Promise((resolve, reject) => {
     execFile(file, args, { timeout: 120000 }, (err, out, errOut) => (err ? reject(new Error(String(errOut || err.message).trim())) : resolve(String(out))));
   });
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'capri-ollama-'));
   try {
-    const res = await fetch(OLLAMA_MAC);
+    const res = await fetch(OLLAMA_ZIP);
     if (!res.ok) throw new Error(`ollama.com answered ${res.status}`);
     const total = Number(res.headers.get('content-length')) || 0;
     const zip = path.join(tmp, 'Ollama.zip');
@@ -113,29 +103,13 @@ async function installOllamaMac(onLine) {
   }
 }
 
-// Installs Ollama with winget (Windows' own package manager); onLine(text) for what it prints.
-function installOllama(onLine) {
-  if (MAC) return installOllamaMac(onLine);
-  return new Promise((resolve) => {
-    const child = spawn('winget', [
-      'install', '--id', 'Ollama.Ollama', '--exact', '--silent',
-      '--accept-source-agreements', '--accept-package-agreements', '--disable-interactivity',
-    ], { windowsHide: true });
-    // its progress bars redraw with \r: the last state of each line is enough
-    const read = (chunk) => String(chunk).split(/[\r\n]+/).map((l) => l.trim()).filter((l) => /[a-z]{3}/i.test(l)).forEach((l) => onLine?.(l));
-    child.stdout.on('data', read);
-    child.stderr.on('data', read);
-    child.on('error', (err) => resolve({ ok: false, error: err.message }));
-    child.on('close', (code) => resolve({ ok: code === 0, code }));
-  });
-}
 
 // Wakes Ollama up (its app, else `ollama serve` in the background) and waits for it to answer.
 async function startOllama() {
   const { app, cli } = ollamaFiles();
-  const run = (file, args) => spawn(file, args, { detached: true, stdio: 'ignore', windowsHide: true }).on('error', () => {}).unref();
+  const run = (file, args) => spawn(file, args, { detached: true, stdio: 'ignore' }).on('error', () => {}).unref();
   await mac.pathReady();
-  if (fs.existsSync(app)) run(MAC ? 'open' : app, MAC ? ['-g', '-a', app] : []); // a Mac app: in the background
+  if (fs.existsSync(app)) run('open', ['-g', '-a', app]); // in the background: no window to show
   else run(fs.existsSync(cli) ? cli : 'ollama', ['serve']);
   for (let i = 0; i < 40; i++) {
     if (await ollama.models().catch(() => null)) return { ok: true };
@@ -184,9 +158,10 @@ async function pullModel(name, onProgress, signal) {
 }
 
 // Claude Code (or Codex) through Ollama, in a window of its own: Ollama fetches what's missing and
-// asks which model to use. She sees it like any other session, through her hooks.
-// On a Mac: a little script opened in your terminal (Terminal, or the one you picked for .command files).
-function launchThroughOllamaMac(integration) {
+// asks which model to use. She sees it like any other session, through her hooks. A little script,
+// opened in your terminal (Terminal, or the one you picked for .command files).
+function launchThroughOllama(integration) {
+  if (!['claude', 'codex'].includes(integration)) return { ok: false };
   const { cli } = ollamaFiles();
   const ollamaCmd = fs.existsSync(cli) ? `'${cli.replace(/'/g, "'\\''")}'` : 'ollama';
   const script = path.join(os.tmpdir(), `capri-ollama-${integration}.command`);
@@ -196,21 +171,7 @@ function launchThroughOllamaMac(integration) {
   return { ok: true };
 }
 
-function launchThroughOllama(integration) {
-  if (MAC && ['claude', 'codex'].includes(integration)) return launchThroughOllamaMac(integration);
-  if (!WIN || !['claude', 'codex'].includes(integration)) return { ok: false };
-  const { cli } = ollamaFiles();
-  // `start` opens a new console window (its first quoted argument is the window's title); cmd /k
-  // strips the outer quotes of what follows, so a path with spaces in it keeps its own
-  const command = `""${fs.existsSync(cli) ? cli : 'ollama'}" launch ${integration}"`;
-  spawn('cmd.exe', ['/d', '/c', 'start', '"Capri"', 'cmd.exe', '/k', command], {
-    detached: true, stdio: 'ignore', windowsVerbatimArguments: true,
-  }).on('error', () => {}).unref();
-  return { ok: true };
-}
-
-// API keys are kept encrypted in config.json, with your Windows account (DPAPI) or your Mac's
-// keychain: "enc:<base64>".
+// API keys are kept encrypted in config.json, with a key from your Mac's keychain: "enc:<base64>".
 function sealKey(key) {
   return safeStorage.isEncryptionAvailable() ? `enc:${safeStorage.encryptString(key).toString('base64')}` : key;
 }

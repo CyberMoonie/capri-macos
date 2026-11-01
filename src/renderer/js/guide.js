@@ -84,7 +84,7 @@ export class Guide {
   // macOS hasn't let her do something yet ('screen': see your screen): what to allow, with a button
   // to that page of System Settings.
   permission(page) {
-    const m = this.brain.t.mac;
+    const m = this.brain.t.permission;
     return this.scene(async () => {
       const id = await this.ask({
         face: 'aside', line: page === 'screen' ? m.screen : m.access, quote: page === 'screen' ? m.screenHow : m.accessHow,
@@ -272,7 +272,7 @@ export class Guide {
       await this.ask({ face: 'wide', line: t.missing, quote: t.missingHow, actions: this.ok() });
       return;
     }
-    // Explorer comes up in front: a new window, or the one already showing that folder, brought back
+    // Finder comes up in front: a new window, or the one already showing that folder, brought back
     const front = () => capri.windows.wins.find((w) => w.id === capri.windows.fg) || null;
     const win = (await this.until(() => (capri.windows.fg !== before ? front() : null), 2500)) || front();
     const scene = this.sceneId;

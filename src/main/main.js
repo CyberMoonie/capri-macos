@@ -14,7 +14,6 @@ const config = require('./config');
 const { TRAY, LANGS } = require('./labels');
 const { createBridge } = require('./bridge');
 const { startWindowWatch, aisIn, aisAt } = require('./windows');
-const { overlayArea: areaOn } = require('./area');
 const mac = require('./mac');
 const llm = require('./llm');
 const ollama = require('./ollama');
@@ -31,10 +30,9 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.CAPRI_PORT) || 47823;
 const SOUND_EXT = /\.(mp3|wav|ogg|m4a)$/i;
-const MAC = process.platform === 'darwin';
-// Her window's place among the others. On a Mac, under the Dock and the menu bar (they come up over
-// her legs, like the taskbar on Windows, and stay clickable), over every app's windows.
-const LEVEL = MAC ? 'modal-panel' : 'screen-saver';
+// Her window's place among the others: under the Dock and the menu bar (they come up over her, and
+// stay clickable), over every app's windows.
+const LEVEL = 'modal-panel';
 
 const OLLAMA_SITE = 'https://ollama.com';
 
@@ -120,7 +118,7 @@ function targetDisplay() {
 }
 
 // Her window over to another screen (she's on her way there, screens.js). Set twice: going to a
-// screen with another scale, Windows resizes the window once it lands there.
+// screen with another scale, macOS can size the window again once it lands there.
 function moveOverlay(id) {
   if (!displays().some((d) => d.id === id)) return null;
   config.save({ displayId: id });
@@ -132,21 +130,21 @@ function moveOverlay(id) {
   return area;
 }
 
-// Her window on her screen, and how much of it is below the taskbar or the Dock (area.js).
+// Her window: her screen's work area (never over the menu bar nor the Dock).
 function overlayArea() {
-  return areaOn(targetDisplay(), config.load().rest);
+  return { area: targetDisplay().workArea };
 }
 
 function fitOverlay() {
   if (!overlay) return;
-  const { area, gap } = overlayArea();
+  const { area } = overlayArea();
   overlay.setBounds(area);
-  overlay.webContents.send('overlay:resize', { width: area.width, height: area.height, gap });
+  overlay.webContents.send('overlay:resize', { width: area.width, height: area.height });
 }
 
-// The pointer reaches her click-through window through a mouse hook, and Windows drops a hook that
-// doesn't answer in time without a word (waking from sleep, a locked screen, a stall): she can't be
-// clicked anymore. Off then on puts in a new one; her place on top and her size are set again too.
+// The pointer reaches her click-through window as forwarded moves, and those can stop coming without a
+// word (waking from sleep, a locked screen): she can't be clicked anymore. Off then on sets them up
+// again; her place on top and her size are set again too.
 function rearmOverlay() {
   if (!overlay || overlay.isDestroyed()) return;
   overlay.setIgnoreMouseEvents(false);
@@ -155,18 +153,6 @@ function rearmOverlay() {
   fitOverlay();
   sendCommand('rearmed'); // click-through again: she waits for the pointer to be on her
   console.log('[capri] mouse hook set up again');
-}
-
-// Back on top of everything, the taskbar included (it comes up over her when it's clicked). Twice:
-// the taskbar can come up again a moment later, as its menus and previews open.
-function raiseOverlay() {
-  for (const wait of [0, 400]) {
-    setTimeout(() => {
-      if (!overlay || overlay.isDestroyed()) return;
-      overlay.setAlwaysOnTop(true, LEVEL);
-      overlay.moveTop();
-    }, wait);
-  }
 }
 
 function createOverlay() {
@@ -184,10 +170,9 @@ function createOverlay() {
     focusable: false,
     hasShadow: false,
     alwaysOnTop: true,
-    // (not a panel on a Mac: Electron keeps those on every desktop, and she has to stay on the one you
-    // leave, then follow you)
-    type: process.platform === 'win32' ? 'toolbar' : undefined,
-    acceptFirstMouse: true, // a Mac: your first click on her is hers, not just bringing her app forward
+    // (not a panel: Electron keeps those on every desktop, and she has to stay on the one you leave,
+    // then follow you)
+    acceptFirstMouse: true, // your first click on her is hers, not just bringing her app forward
     show: false,
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload.js'),
@@ -202,18 +187,14 @@ function createOverlay() {
   overlay.setAlwaysOnTop(true, LEVEL);
   overlay.setIgnoreMouseEvents(true, { forward: true });
   overlay.loadURL('capri://app/src/renderer/index.html');
-  // always shown: put away, she's still there as her biochip in the corner. Sized again first:
-  // Windows keeps a new window inside the work area, and resting on the taskbar it covers it too.
+  // always shown: put away, she's still there as her biochip in the corner. Sized again first.
   overlay.once('ready-to-show', () => {
     fitOverlay();
     overlay.showInactive();
-    // on a Mac, on the desktop (Space) you're on only, and allowed over full-screen apps: when you go
-    // to another one, she stays on this one and then follows you there (followSpace). Set once she's
-    // shown: showing a panel puts it on every desktop.
-    if (MAC) {
-      overlay.setVisibleOnAllWorkspaces(false, { visibleOnFullScreen: true, skipTransformProcessType: true });
-      overlay.setHiddenInMissionControl(true); // she isn't one of your windows
-    }
+    // on the desktop (Space) you're on only, and allowed over full-screen apps: when you go to
+    // another one, she stays on this one and then follows you there (followSpace)
+    overlay.setVisibleOnAllWorkspaces(false, { visibleOnFullScreen: true, skipTransformProcessType: true });
+    overlay.setHiddenInMissionControl(true); // she isn't one of your windows
   });
   overlay.webContents.on('render-process-gone', (_e, details) => {
     console.error('[capri] renderer gone:', details.reason);
@@ -236,7 +217,7 @@ function sendCommand(name, payload = {}) {
 // arrives in a teleport. If this Mac won't bring her window over, she stays on every desktop instead.
 let space = null; // { seen, everywhere, move }
 function followSpace(data) {
-  if (!MAC || !overlay || overlay.isDestroyed()) return;
+  if (!overlay || overlay.isDestroyed()) return;
   if (!space) space = { seen: data.space, everywhere: false, move: null };
   if (data.space === space.seen || space.everywhere) {
     space.seen = data.space;
@@ -279,7 +260,6 @@ let typing = false;
 let otherApp = null; // its pid
 let away = false; // her window hidden for a game (pc.js)
 function handBack() {
-  if (!MAC) return;
   // a beat later: the click may have opened her chat, which keeps the keyboard
   setTimeout(() => {
     if (!typing && otherApp) mac.helper(['activate', String(otherApp)]).catch(() => {});
@@ -291,7 +271,7 @@ function handBack() {
 // changes, only to spot another AI in it (her jealousy): never kept, never sent.
 let titled = { fg: null, ai: [] };
 function titleAis(data) {
-  if (!MAC || data.titles || !(data.fg > 0) || systemPreferences.getMediaAccessStatus('screen') !== 'granted') return [];
+  if (data.titles || !(data.fg > 0) || systemPreferences.getMediaAccessStatus('screen') !== 'granted') return [];
   if (titled.fg === data.fg) return titled.ai;
   const { fg } = data;
   titled = { fg, ai: [] };
@@ -325,7 +305,7 @@ let seenAi = []; // the AIs the window in front was spotted as, before its tab's
 const withTab = (ai) => [...new Set([...ai, ...tab.ai])];
 async function checkTab() {
   const w = lastWindows;
-  const script = MAC && w && config.load().jealous !== false && BROWSERS[w.app];
+  const script = w && config.load().jealous !== false && BROWSERS[w.app];
   const ai = script ? aisAt(await mac.osa(`tell application id "${w.app}" to get ${script}`, 3000)) : [];
   if (lastWindows !== w && lastWindows?.fg !== w?.fg) return; // you've moved on meanwhile
   const changed = tab.fg !== w?.fg || tab.ai.join() !== ai.join();
@@ -358,11 +338,11 @@ function playDemo() {
   next();
 }
 
-// During the demo, a little fake terminal for her to sit on and take over (where she sees your
-// windows: Windows and macOS). Opened without stealing focus; closing it drops her off it.
+// During the demo, a little fake terminal for her to sit on and take over. Opened without stealing
+// focus; closing it drops her off it.
 let demoWin = null;
-const PROMPT = MAC ? '~/night-city-api %' : 'PS C:\\night-city-api&gt;';
-const DEMO_TERMINAL = `<body style="margin:0;background:#14101c;color:#8f8aa3;font:13px/1.7 ${MAC ? 'Menlo' : 'Consolas'},monospace;padding:14px 18px">
+const PROMPT = '~/night-city-api %';
+const DEMO_TERMINAL = `<body style="margin:0;background:#14101c;color:#8f8aa3;font:13px/1.7 Menlo,monospace;padding:14px 18px">
 <div style="color:#36ff7a">${PROMPT} npm test -- gigs</div>
 <div>&nbsp;&nbsp;GET /gigs</div><div style="color:#36ff7a">&nbsp;&nbsp;&nbsp;&nbsp;✓ returns 20 items per page</div>
 <div style="color:#36ff7a">&nbsp;&nbsp;&nbsp;&nbsp;✓ paginates with a cursor</div><div style="color:#36ff7a">&nbsp;&nbsp;&nbsp;&nbsp;✓ rejects a bad cursor</div>
@@ -371,7 +351,7 @@ const DEMO_TERMINAL = `<body style="margin:0;background:#14101c;color:#8f8aa3;fo
 function demoWindow(open) {
   demoWin?.destroy();
   demoWin = null;
-  if (!open || !(process.platform === 'win32' || mac.available())) return false;
+  if (!open || !mac.available()) return false;
   const b = overlay.getBounds();
   demoWin = new BrowserWindow({
     x: Math.round(b.x + b.width * 0.5 - 310), y: Math.round(b.y + b.height * 0.42), width: 620, height: 300,
@@ -397,13 +377,13 @@ function resolveLang(setting) {
 // What the overlay gets: `lang` is the resolved one, `langSetting` what the user picked.
 function rendererConfig() {
   const { apiKeys, ...cfg } = config.load(); // the keys stay here: the overlay only learns which ones are set
-  return { ...cfg, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(cfg.lang), langSetting: cfg.lang, floorGap: overlayArea().gap, platform: process.platform };
+  return { ...cfg, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(cfg.lang), langSetting: cfg.lang };
 }
 
 function updateConfig(patch) {
   config.save(patch);
   if ('rest' in patch) {
-    fitOverlay(); // the taskbar in her window or not
+    fitOverlay();
     windowWatch?.refresh();
   }
   const cfg = rendererConfig();
@@ -417,8 +397,7 @@ function rebuildTray() {
   const cfg = config.load();
   const hookState = activeHooks().status();
   const watched = activeAssistant();
-  const labels = TRAY[resolveLang(cfg.lang)];
-  const t = Object.fromEntries(Object.entries({ ...labels, ...(MAC && labels.mac) }).map(([key, value]) =>
+  const t = Object.fromEntries(Object.entries(TRAY[resolveLang(cfg.lang)]).map(([key, value]) =>
     [key, typeof value === 'string' && watched.id !== 'claude' ? value.replaceAll('Claude Code', watched.name) : value]));
 
   const screens = displays();
@@ -555,7 +534,7 @@ function rebuildTray() {
     },
     {
       label: t.rest,
-      submenu: [['corner', t.restCorner], ['taskbar', t.restTaskbar]].map(([rest, label]) => ({
+      submenu: [['corner', t.restCorner], ['dock', t.restDock]].map(([rest, label]) => ({
         label, type: 'radio', checked: cfg.rest === rest, click: () => updateConfig({ rest }),
       })),
     },
@@ -582,20 +561,6 @@ function rebuildTray() {
         label, type: 'radio', checked: cfg.motion === motion, click: () => updateConfig({ motion, motionAsked: true }),
       })),
     },
-    // for PCs that show her window black (NVIDIA cards): not a thing on a Mac
-    ...(MAC ? [] : [{
-      label: t.display,
-      // only read when she starts: she restarts in the mode picked
-      submenu: [['auto', t.displayAuto], ['gl', t.displayGl], ['software', t.displaySoftware]].map(([render, label]) => ({
-        label, type: 'radio', checked: cfg.render === render,
-        click: () => {
-          if (cfg.render === render) return;
-          config.save({ render });
-          app.relaunch();
-          app.exit(0);
-        },
-      })),
-    }]),
     {
       label: t.lang,
       submenu: [[t.auto, 'auto'], ...LANGS.map((lang) => [TRAY[lang].name, lang])].map(([label, lang]) => ({
@@ -623,13 +588,8 @@ function rebuildTray() {
   trayMenu = menu;
 }
 
-// Run from a clone (`npm start`), electron.exe alone would open the default Electron app at login:
-// it needs the project folder as argument. macOS can't pass one to a login item: from a clone, a
-// launch agent of yours (~/Library/LaunchAgents) starts her instead.
-function loginItemOptions() {
-  return app.isPackaged ? {} : { path: process.execPath, args: [ROOT] };
-}
-
+// Run from a clone (`npm start`), a login item would open the bare Electron app (it can't be given
+// the project folder): a launch agent of yours (~/Library/LaunchAgents) starts her instead.
 const devAgent = () => path.join(app.getPath('home'), 'Library', 'LaunchAgents', 'capri.desktop.dev.plist');
 
 function devAgentPlist() {
@@ -648,7 +608,7 @@ function devAgentPlist() {
 
 // Whether she starts when you log in; with `on`, sets it first.
 function openAtLogin(on) {
-  if (MAC && !app.isPackaged) {
+  if (!app.isPackaged) {
     if (on === true) {
       fs.mkdirSync(path.dirname(devAgent()), { recursive: true });
       fs.writeFileSync(devAgent(), devAgentPlist());
@@ -657,8 +617,8 @@ function openAtLogin(on) {
     }
     return fs.existsSync(devAgent());
   }
-  if (typeof on === 'boolean') app.setLoginItemSettings({ ...loginItemOptions(), openAtLogin: on });
-  return app.getLoginItemSettings(loginItemOptions()).openAtLogin;
+  if (typeof on === 'boolean') app.setLoginItemSettings({ openAtLogin: on });
+  return app.getLoginItemSettings().openAtLogin;
 }
 
 // From the tray, she says how it went; from her welcome panel (quiet), the panel does.
@@ -676,7 +636,7 @@ function runHooks(action, { quiet = false } = {}) {
 }
 
 // The model she talks with: the one picked in her menu if it's still installed, else the first one
-// on this PC (a cloud model only once you pick it).
+// on this Mac (a cloud model only once you pick it).
 function pickModel(cfg = config.load()) {
   if (!chatModels?.length) return null;
   if (chatModels.includes(cfg.chatModel)) return cfg.chatModel;
@@ -723,7 +683,7 @@ async function fetchModel(name, onProgress, signal) {
   return model;
 }
 
-// The page that links this PC to your Ollama account, then a look every few seconds until you're in.
+// The page that links this Mac to your Ollama account, then a look every few seconds until you're in.
 async function signInToOllama() {
   if (!cloud.account?.signin) return;
   shell.openExternal(cloud.account.signin);
@@ -735,7 +695,7 @@ async function signInToOllama() {
 
 // Her answer from the model picked, or from the next one when that one can't: too busy twice in a row
 // (Gemini's "high demand", an Ollama cloud model out of free use), not served anymore (an older model
-// closed to new keys), or signed out of Ollama. A model on this PC first. The model that answered is
+// closed to new keys), or signed out of Ollama. A model on this Mac first. The model that answered is
 // kept for next time.
 async function chatWithFallback(cfg, messages, send, signal, streamed) {
   let model = pickModel(cfg);
@@ -764,7 +724,7 @@ async function chatWithFallback(cfg, messages, send, signal, streamed) {
 // macOS lets an app see the screen only once you've allowed it (Privacy & Security › Screen & System
 // Audio Recording). The first time, macOS asks you itself; she says what to allow, with a button to it.
 async function screenAllowed() {
-  if (!MAC || systemPreferences.getMediaAccessStatus('screen') === 'granted') return true;
+  if (systemPreferences.getMediaAccessStatus('screen') === 'granted') return true;
   if (!config.load().screenAsked) {
     config.save({ screenAsked: true });
     await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1, height: 1 } }).catch(() => null);
@@ -865,9 +825,8 @@ async function pickClaudeFolder() {
 }
 
 function createTray() {
-  // its 32 px drawn at 16 points in the Mac's menu bar (as sharp on a Retina screen), not 32
-  const file = path.join(ROOT, 'assets', 'icons', 'tray.png');
-  const icon = MAC ? nativeImage.createFromBuffer(fs.readFileSync(file), { scaleFactor: 2 }) : nativeImage.createFromPath(file);
+  // its 32 px drawn at 16 points in the menu bar (as sharp on a Retina screen), not 32
+  const icon = nativeImage.createFromBuffer(fs.readFileSync(path.join(ROOT, 'assets', 'icons', 'tray.png')), { scaleFactor: 2 });
   tray = new Tray(icon);
   tray.setToolTip('Capri');
   tray.on('click', () => sendCommand('status'));
@@ -898,15 +857,15 @@ function registerIpc() {
     const area = moveOverlay(id);
     if (!area) return null;
     await new Promise((r) => setTimeout(r, 60));
-    overlay.setBounds(area); // again, once Windows has settled it on its new screen
+    overlay.setBounds(area); // again, once macOS has settled it on its new screen
     const o = overlay.getBounds();
-    return { origin: { x: o.x, y: o.y }, width: o.width, height: o.height, gap: overlayArea().gap };
+    return { origin: { x: o.x, y: o.y }, width: o.width, height: o.height };
   });
   ipcMain.handle('config:get', () => rendererConfig());
   ipcMain.handle('hooks:status', () => activeHooks().status());
   ipcMain.handle('config:set', (_e, patch) => updateConfig(patch));
   ipcMain.handle('demo:window', (_e, open) => demoWindow(open));
-  // right-clicking her: the same menu as the tray icon (which Windows often hides behind the ^ by the clock)
+  // right-clicking her: the same menu as her icon in the menu bar (which a crowded menu bar can hide)
   ipcMain.on('menu:open', () => trayMenu?.popup({ window: overlay, callback: () => handBack() }));
   // her welcome panel's buttons
   ipcMain.handle('hooks:install', () => runHooks('install', { quiet: true }));
@@ -1050,7 +1009,7 @@ function registerIpc() {
     return files.screenshot(targetDisplay()).catch(() => null);
   });
   // macOS: System Settings on the page that lets her do something (Screen Recording, Accessibility)
-  ipcMain.on('mac:settings', (_e, page) => MAC && mac.SETTINGS[page] && shell.openExternal(mac.SETTINGS[page]));
+  ipcMain.on('mac:settings', (_e, page) => mac.SETTINGS[page] && shell.openExternal(mac.SETTINGS[page]));
   ipcMain.handle('web:search', (_e, query) => {
     const q = String(query || '').trim().slice(0, 300);
     if (!q) return false;
@@ -1061,14 +1020,14 @@ function registerIpc() {
   ipcMain.handle('apps:music', (_e, query) => launch.music(query).catch(() => false));
   ipcMain.handle('apps:site', (_e, address) => launch.site(address).catch(() => false));
   // typing to her: the overlay takes the keyboard while the chat is open, and gives it back after
-  // On a Mac only the app in front gets the keyboard: she comes in front, then hands it back to the
-  // app you were in.
+  // Only the app in front gets the keyboard: she comes in front, then hands it back to the app you
+  // were in.
   ipcMain.on('overlay:focus', (_e, on) => {
     if (!overlay) return;
     overlay.setFocusable(Boolean(on));
     typing = Boolean(on);
     if (on) {
-      if (MAC) app.focus({ steal: true });
+      app.focus({ steal: true });
       overlay.focus();
     } else {
       overlay.blur();
@@ -1085,14 +1044,14 @@ function registerIpc() {
       overlay.hide();
       return;
     }
-    // back on the desktop you're on now (on a Mac her window may be on the game's)
-    const all = (on) => MAC && overlay.setVisibleOnAllWorkspaces(on, { visibleOnFullScreen: true, skipTransformProcessType: true });
+    // back on the desktop you're on now (her window may be on the game's)
+    const all = (on) => overlay.setVisibleOnAllWorkspaces(on, { visibleOnFullScreen: true, skipTransformProcessType: true });
     all(true);
     overlay.showInactive();
     setTimeout(() => {
       if (overlay.isDestroyed()) return;
       all(false);
-      if (MAC) overlay.setHiddenInMissionControl(true);
+      overlay.setHiddenInMissionControl(true);
     }, 250);
   });
   // her report card's copy button: a picture of that part of the overlay, on the clipboard
@@ -1103,20 +1062,17 @@ function registerIpc() {
     await clipboard.write([new ClipboardItem({ 'image/png': png })]);
     return true;
   });
-  // her guide: where her tray icon is (it lives in the taskbar, or the Mac's menu bar, off the
-  // overlay, hence overlay coordinates past its edge), and the corner by the clock in case Windows
-  // hid it behind the ^ (or the menu bar, out of room, behind the notch)
+  // her guide: where her icon is (in the menu bar, off the overlay, hence overlay coordinates past its
+  // edge), and the corner by the clock in case the menu bar, out of room, hid it (behind the notch)
   ipcMain.handle('guide:tray', () => {
     const o = overlay.getBounds();
     const { bounds: d, workArea } = targetDisplay();
     const b = tray?.getBounds();
     const icon = b && b.width > 0 ? { x: b.x - o.x, y: b.y - o.y, w: b.width, h: b.height } : null;
-    const corner = MAC
-      ? { x: d.x + d.width - 150 - o.x, y: d.y - o.y, w: 140, h: Math.max(24, workArea.y - d.y) }
-      : { x: d.x + d.width - 150 - o.x, y: d.y + d.height - 44 - o.y, w: 140, h: 40 };
+    const corner = { x: d.x + d.width - 150 - o.x, y: d.y - o.y, w: 140, h: Math.max(24, workArea.y - d.y) };
     return { icon, corner };
   });
-  // her guide: Claude Code's folder (~/.claude) in Explorer, its settings file selected
+  // her guide: Claude Code's folder (~/.claude) in Finder, its settings file selected
   ipcMain.handle('guide:claudeFolder', () => {
     const file = activeHooks().status().file;
     const dir = path.dirname(file);
@@ -1150,7 +1106,7 @@ async function debugHandler(route, body) {
     return { ok: true };
   }
   if (route === 'unhook') {
-    // the pointer no longer passed on to her, as when Windows drops the mouse hook
+    // the pointer no longer passed on to her, as when its forwarded moves stop coming
     overlay.setIgnoreMouseEvents(true);
     return { ok: true };
   }
@@ -1241,25 +1197,11 @@ async function debugHandler(route, body) {
   throw new Error('unknown debug route');
 }
 
-// How her window is drawn, set before Electron starts (her menu › Display). On some PCs her see-through
-// window shows up black (NVIDIA with FXAA, MFAA or HDR on, for one): drawing it through OpenGL, or
-// without the graphics card, often fixes it.
-function applyRender() {
-  const { render } = config.load();
-  if (render === 'gl') app.commandLine.appendSwitch('use-angle', 'gl');
-  if (render === 'software') {
-    app.disableHardwareAcceleration();
-    app.commandLine.appendSwitch('enable-unsafe-swiftshader'); // her drawing still needs WebGL, done on the CPU
-  }
-  // --dev: what Chromium ended up drawing with
-  if (DEV) app.whenReady().then(() => setTimeout(() => console.log('[capri] display:', render, JSON.stringify(app.getGPUFeatureStatus())), 4000));
-}
-
 // Started from Downloads or a disk image, macOS runs an app from a temporary copy: her hooks would
 // point at a folder gone tomorrow. She offers to move herself to Applications first (and restarts).
 async function offerApplications() {
-  if (!MAC || !app.isPackaged || app.isInApplicationsFolder()) return;
-  const t = TRAY[resolveLang(config.load().lang)].mac;
+  if (!app.isPackaged || app.isInApplicationsFolder()) return;
+  const t = TRAY[resolveLang(config.load().lang)];
   app.focus({ steal: true });
   const { response } = await dialog.showMessageBox({
     type: 'question', message: t.move, detail: t.moveHow, buttons: [t.moveBtn, t.moveLater], defaultId: 0, cancelId: 1,
@@ -1274,16 +1216,14 @@ async function offerApplications() {
 
 function main() {
   mac.fixPath(); // her programs (claude, ollama, node) found even when started from Finder
-  applyRender();
   if (!app.requestSingleInstanceLock()) {
     app.quit();
     return;
   }
   app.on('second-instance', () => sendCommand('status'));
-  if (process.platform === 'win32') app.setAppUserModelId('capri.desktop');
 
   app.whenReady().then(async () => {
-    if (MAC) app.dock?.hide(); // she lives on the desktop and in the menu bar, not in the Dock
+    app.dock?.hide(); // she lives on the desktop and in the menu bar, not in the Dock
     await offerApplications();
     if (!['codex', 'claude'].includes(config.load().assistant)) config.save({ assistant: activeAssistant().id });
     serveProtocol();
@@ -1293,8 +1233,6 @@ function main() {
     windowWatch = startWindowWatch({
       overlay,
       onUpdate: (data) => {
-        // a click on the taskbar brings it up over her: sitting on it, her legs would vanish behind it
-        if (data.taskbar && !lastWindows?.taskbar && config.load().rest === 'taskbar') raiseOverlay();
         followSpace(data);
         if (data.pid && data.pid !== process.pid) otherApp = data.pid;
         const ais = titleAis(data);
@@ -1326,8 +1264,8 @@ function main() {
     screen.on('display-metrics-changed', screensChanged);
     screen.on('display-added', screensChanged);
     screen.on('display-removed', screensChanged);
-    if (MAC) setInterval(checkTab, 3000); // the tab in front, while a browser is (checkTab)
-    // after sleep or a locked screen, once Windows has settled
+    setInterval(checkTab, 3000); // the tab in front, while a browser is (checkTab)
+    // after sleep or a locked screen, once macOS has settled
     powerMonitor.on('resume', () => setTimeout(rearmOverlay, 2000));
     powerMonitor.on('unlock-screen', () => setTimeout(rearmOverlay, 1000));
   });

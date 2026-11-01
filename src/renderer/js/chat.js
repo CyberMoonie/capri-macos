@@ -1,6 +1,6 @@
 // Talking to her: you type in her panel, and a model (setup.js picks which) answers as her, in
 // writing. The replies are AI-generated, and the panel says so on every chat.
-// She can do a few things on your PC when you ask (Windows): open an app or a game, play music or
+// She can do a few things on your Mac when you ask: open an app or a game, play music or
 // control what's playing, open a website, close an app. She spots what you want in what you wrote,
 // or the model asks for it with a tag in its answer. Music right away; an app you named yourself
 // right away; anything only the model asked for, a website, and closing an app behind a button.
@@ -79,7 +79,7 @@ export function songIn(text) {
 // what's left when it doesn't say which song ("mets de la musique", "play something")
 const VAGUE_SONG = /^(?:(?:de\s+la|du|des|la|le|les|une?|some|a|the|un|algo\s+de|alguma|um|uma|что-нибудь)\s+)?(?:musique|music|son|sons|chanson|morceau|truc|quelque\s+chose|something|song|tunes?|m[úu]sica|canci[óo]n|algo|coisa|музыку|песню)?\s*[.!?]*$/iu;
 // "trouve mon CV", "où est le pdf du contrat", "find my report", "найди файл…": her search verbs, and
-// what makes it a file on your PC or a search on the web
+// what makes it a file on your Mac or a search on the web
 const SEARCH_VERB = /(?:cherche|recherche|trouve|retrouve|où (?:est|sont)|search(?: for)?|find|look (?:for|up)|where(?:'s| is| are)|busca|encuentra|d[óo]nde est[áa]n?|procura|acha|onde est[áa]o?|найди|поищи|где)/i;
 const FILE_WORD = /fichier|dossier|document|photo|image|vid[ée]o|\bpdf\b|\bfiles?\b|folder|archivo|carpeta|arquivo|pasta|файл|папк|\.\w{2,4}\b|sur mon (?:pc|ordi)|dans mes fichiers|on my (?:pc|computer)|en mi (?:pc|ordenador)|no meu (?:pc|computador)|на (?:компьютере|пк)/i;
 const WEB_WORD = /google|internet|\ble web\b|the web|\bonline\b|en ligne|в интернете|в гугле/i;
@@ -143,7 +143,7 @@ const NAME_ASK = /(?:appelle[- ]moi|call me|my name is|je m['’]appelle|ll[aá]
 // "souviens-toi que…", "remember that…", "recuerda que…", "lembra que…", "запомни, что…" (said first thing)
 const MEMO_ASK = /^\s*(?:capri,?\s+|stp,?\s+|please,?\s+)?(?:souviens[- ]toi(?: que| de)?|n['’]oublie pas(?: que| de)?|remember(?: that)?|recuerda(?: que)?|lembr[ae](?:-se)?(?: que| de)?|запомни,?(?: что)?)\s+(.{3,200})/iu;
 const MEMORIES_MAX = 30;
-// sites asked for by name ("open youtube") when no app on the PC goes by it: the address is hers, not
+// sites asked for by name ("open youtube") when no app on the Mac goes by it: the address is hers, not
 // the model's, so it opens right away like an app you named
 const SITES = {
   youtube: 'https://www.youtube.com', google: 'https://www.google.com', gmail: 'https://mail.google.com',
@@ -173,7 +173,7 @@ export class Chat {
     this.open = false;
     this.turn = 0;     // id of the answer coming in, if any
     this.answer = '';
-    this.apps = [];    // the apps open on this PC, as last listed: [{ name, label }]
+    this.apps = [];    // the apps open on this Mac, as last listed: [{ name, label }]
     this.appsReady = Promise.resolve();
     this.onSetup = null; // (status) => void: she can't answer yet (app.js hands it to setup.js)
     this.onBetterModel = null; // () => void: a bigger model than the tiny one she's on (setup.js)
@@ -382,7 +382,7 @@ export class Chat {
       // macOS hasn't let her see the screen: what to allow, and a button to it (not her AI making excuses)
       const need = this.needs('screen');
       say(need.line, need.face);
-      this.panel.setActions([{ id: 'settings', label: this.brain.t.mac.settings, primary: true }, { id: 'no', label: this.t.no }], (id) => {
+      this.panel.setActions([{ id: 'settings', label: this.brain.t.permission.settings, primary: true }, { id: 'no', label: this.t.no }], (id) => {
         this.panel.setActions([]);
         if (id === 'settings') this.host.openMacSettings('screen');
       });
@@ -445,12 +445,10 @@ export class Chat {
     }
     const media = MEDIA_ASK.find(([, re]) => re.test(text))?.[0];
     if (media && (count <= 5 || MUSIC_WORD.test(text))) return { kind: 'media', action: media };
-    // a Mac knows what's playing: "play", "play the music", "play spotify" pick it up where it stopped
-    if (this.capri?.platform === 'darwin') {
-      const what = PLAY_ASK.exec(text.trim())?.[1]?.trim();
-      if (/^play[\s.!?]*$/i.test(text.trim()) || (what && !HER_PICK.test(what) && (VAGUE_SONG.test(what) || /^(?:spotify|apple music|music app)[.!?]*$/i.test(what)))) {
-        return { kind: 'media', action: 'play' };
-      }
+    // she knows what's playing: "play", "play the music", "play spotify" pick it up where it stopped
+    const what = PLAY_ASK.exec(text.trim())?.[1]?.trim();
+    if (/^play[\s.!?]*$/i.test(text.trim()) || (what && !HER_PICK.test(what) && (VAGUE_SONG.test(what) || /^(?:spotify|apple music|music app)[.!?]*$/i.test(what)))) {
+      return { kind: 'media', action: 'play' };
     }
     // "play it": the song she just named, where you say (else where her menu says)
     const again = PLAY_IT.exec(text.trim());
@@ -536,7 +534,7 @@ export class Chat {
       // "…and open the folder" / "…and open it": done right away, on the newest one
       if (asked.then === 'folder' && (await this.host.openFile(results[0].path, true))) lines.push(fmt(t.folderOpened, { name: results[0].name }));
       // (never a program or a script on its own: that one waits for its button)
-      const runs = /\.(exe|bat|cmd|ps1|vbs|vbe|js|jse|wsf|msi|reg|scr|com|jar|hta|app|command|tool|sh|zsh|bash|csh|pkg|mpkg|dmg|scpt|scptd|applescript|workflow|terminal|action|prefpane|saver|osax|kext)$/i.test(results[0].name);
+      const runs = /\.(app|command|tool|sh|zsh|bash|csh|pkg|mpkg|dmg|scpt|scptd|applescript|workflow|terminal|action|prefpane|saver|osax|kext|jar)$/i.test(results[0].name);
       if (asked.then === 'open' && !runs && (await this.host.openFile(results[0].path))) lines.push(fmt(t.opened, { app: results[0].name }));
       return { line: lines.join('\n'), face: 'smug', files: results };
     }
@@ -574,7 +572,7 @@ export class Chat {
 
   // macOS hasn't let her do that yet ('screen', 'accessibility'): what to allow, and a button to it.
   needs(page) {
-    const m = this.brain.t.mac;
+    const m = this.brain.t.permission;
     return page === 'screen'
       ? { line: `${m.screen}\n${m.screenHow}`, face: 'aside', settings: page }
       : { line: `${m.access}\n${m.accessHow}`, face: 'aside', settings: page };
@@ -674,7 +672,7 @@ export class Chat {
     if (face) this.panel.setFace(face);
   }
 
-  // a bolt of red lightning off her fingers, at whatever she's doing on your PC
+  // a bolt of red lightning off her fingers, at whatever she's doing on your Mac
   zap() {
     const h = this.capri.head();
     this.capri.zap(h.x + this.capri.towardCenter() * 280, h.y - 170);
@@ -711,7 +709,7 @@ export class Chat {
   // What macOS needs you to allow, and a button to the page of System Settings where you do it.
   toSettings(done, answer) {
     this.addLine(answer, done.line, done.face);
-    this.panel.setActions([{ id: 'settings', label: this.brain.t.mac.settings, primary: true }, { id: 'no', label: this.t.no }], (id) => {
+    this.panel.setActions([{ id: 'settings', label: this.brain.t.permission.settings, primary: true }, { id: 'no', label: this.t.no }], (id) => {
       this.panel.setActions([]);
       if (id === 'settings') this.host.openMacSettings(done.settings);
     });
@@ -807,7 +805,7 @@ export class Chat {
     this.listApps();
   }
 
-  // What she can do on the PC when you ask (Windows), and nothing else.
+  // What she can do on the Mac when you ask, and nothing else.
   powers() {
     const lines = [
       'Only when the user asks you to open an app, a game, a file or folder on their desktop, or a folder like Downloads, to play music, to control the music playing, or to open a website: say in a few words that you will, and end your answer with one tag: [[open: NAME]], [[music: ARTIST - SONG]] (it plays on YouTube; if they did not say which song, pick one that fits), [[media: ACTION]] (ACTION: pause, play, next, previous, volup, voldown or mute), or [[site: ADDRESS]]. Some of these get a button to confirm, so never say it is already done. Any other time, write no tag at all: there are no other tags.',
@@ -822,7 +820,7 @@ export class Chat {
       if (soon.length) lines.push(`Reminders you're keeping for them: ${soon.map((r) => `${clock(r.at, this.brain.lang)}${r.text ? ` (${r.text})` : ''}`).join('; ')}.`);
     }
     lines.push('Your system also searches the user\'s files when they ask you to find one, searches the web when they ask, takes screenshots, and starts Roblox games by name: what it did shows under your answer, so never make up file names or results.');
-    lines.push('Apart from that, you can\'t see the user\'s screen or files, and you can\'t touch anything else on their PC (settings, files): if asked, say plainly that you can\'t, in character, and don\'t pretend to.');
+    lines.push('Apart from that, you can\'t see the user\'s screen or files, and you can\'t touch anything else on their Mac (settings, files): if asked, say plainly that you can\'t, in character, and don\'t pretend to.');
     return lines;
   }
 

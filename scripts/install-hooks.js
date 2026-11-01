@@ -37,23 +37,22 @@ function settingsPath() {
 
 function hasNode() {
   try {
-    return spawnSync('node', ['-v'], { windowsHide: true, timeout: 3000 }).status === 0;
+    return spawnSync('node', ['-v'], { timeout: 3000 }).status === 0;
   } catch {
     return false;
   }
 }
 
-// In the installed app (the .exe) the hook sits next to the app archive (asarUnpack), where
-// node can read it. With no node on the machine, Capri's own executable runs it as node. The Mac app
-// always runs it itself: Claude Code may be started from somewhere with no node on its PATH.
-const packagedMac = () => process.platform === 'darwin' && Boolean(process.versions.electron) && !process.defaultApp;
+// In the installed app the hook sits next to the app archive (asarUnpack), where node can read it,
+// and Capri's own executable runs it as node: Claude Code may be started from somewhere with no node
+// on its PATH. Run from a clone (`npm start`), the node on yours, else Electron's as node.
+const installed = () => Boolean(process.versions.electron) && !process.defaultApp;
 
 function hookCommand() {
   const script = path.resolve(__dirname, '..', 'hooks', 'capri-hook.js')
-    .replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`)
-    .replace(/\\/g, '/');
-  if (packagedMac() || (process.versions.electron && !hasNode())) {
-    return `ELECTRON_RUN_AS_NODE=1 "${process.execPath.replace(/\\/g, '/')}" "${script}"`;
+    .replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
+  if (installed() || (process.versions.electron && !hasNode())) {
+    return `ELECTRON_RUN_AS_NODE=1 "${process.execPath}" "${script}"`;
   }
   return `node "${script}"`;
 }

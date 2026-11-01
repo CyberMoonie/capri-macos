@@ -39,11 +39,11 @@ async function models() {
   return list.map((m) => m.name);
 }
 
-// Run on Ollama's servers rather than this PC
+// Run on Ollama's servers rather than this Mac
 const isCloud = (model) => known.get(model)?.cloud ?? /[:-]cloud$/.test(model || '');
 
-// Your Ollama account, when you're signed in to it on this PC: { name, plan }. Signed out: { signin },
-// the page that links this PC to an account. null when Ollama can't tell (asleep, cloud turned off).
+// Your Ollama account, when you're signed in to it on this Mac: { name, plan }. Signed out: { signin },
+// the page that links this Mac to an account. null when Ollama can't tell (asleep, cloud turned off).
 async function account() {
   const res = await fetch(`${base()}/api/me`, { method: 'POST', signal: AbortSignal.timeout(6000) }).catch(() => null);
   if (!res) return null;

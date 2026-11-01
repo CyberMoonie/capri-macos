@@ -1,56 +1,27 @@
 'use strict';
 
-// Feeds the overlay with the position of the other windows, so Capri can sit on them. On Windows a
-// small PowerShell helper does the Win32 calls, and we turn its physical pixels into the overlay's
-// coordinates; on macOS her native helper (mac/capri-helper.swift) already speaks in points. It also says when the window in front is another AI (ChatGPT,
+// Feeds the overlay with the position of the other windows, so Capri can sit on them. Her native
+// helper (mac/capri-helper.swift) reads them, in points, in the same coordinates as Electron's screen;
+// they're turned into the overlay's. It also says when the window in front is another AI (ChatGPT,
 // Gemini…: `ai`, the names it matched), for her jealousy, and never passes on a title; which game
-// is in front, if one (`game`, its folder in Steam's library or another launcher's); and the USB
-// sticks plugged in (`usb`: drive letters, or names in /Volumes on a Mac), and the last device
-// plugged in or out (`plug`).
+// is in front, if one (`game`); the USB sticks plugged in (`usb`, their names in /Volumes); the last
+// device plugged in or out (`plug`); the Dock while it shows; and desktop (Space) switches.
 
-const path = require('node:path');
 const readline = require('node:readline');
 const { spawn } = require('node:child_process');
-const { screen } = require('electron');
 const mac = require('./mac');
 
-// in the installed app it sits next to the app archive (asarUnpack), where PowerShell can read it
-const SCRIPT = path.join(__dirname, 'windows.ps1').replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
-
-const WIN = process.platform === 'win32';
-
-// The helper for this system and how to start it, or null when there's none.
-function helperCommand(overlay) {
-  if (WIN) {
-    const handle = overlay.getNativeWindowHandle();
-    const self = handle.length >= 8 ? handle.readBigUInt64LE(0) : BigInt(handle.readUInt32LE(0));
-    return {
-      file: 'powershell.exe',
-      args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', SCRIPT, String(self), String(process.pid)],
-      stdin: 'ignore',
-    };
-  }
-  if (!mac.available()) return null;
+function startWindowWatch({ overlay, onUpdate }) {
+  if (!mac.available()) return { stop() {}, refresh() {} };
   // her window's number on screen ("window:1234:0"), so it isn't one of the windows she sits on
   const self = /^window:(\d+)/.exec(overlay.getMediaSourceId())?.[1] || '0';
-  // stdin stays open: the helper stops when it closes, even if she crashed
-  return { file: mac.HELPER, args: ['watch', self, String(process.pid)], stdin: 'pipe' };
-}
-
-function startWindowWatch({ overlay, onUpdate }) {
-  const command = helperCommand(overlay);
-  if (!command) return { stop() {}, refresh() {} };
 
   let child = null;
   let stopped = false;
   let restarts = 0;
   let last = null; // the helper's last snapshot: it only speaks when something changes
 
-  const toOverlay = (win, bounds) => {
-    const dip = WIN ? screen.screenToDipRect(null, { x: win.x, y: win.y, width: win.w, height: win.h })
-      : { x: win.x, y: win.y, width: win.w, height: win.h };
-    return { id: win.id, x: dip.x - bounds.x, y: dip.y - bounds.y, w: dip.width, h: dip.height, max: win.max };
-  };
+  const toOverlay = (win, bounds) => ({ id: win.id, x: win.x - bounds.x, y: win.y - bounds.y, w: win.w, h: win.h, max: win.max });
 
   // the snapshot as seen from her window, wherever it is now
   const send = () => {
@@ -59,10 +30,10 @@ function startWindowWatch({ overlay, onUpdate }) {
     // only what overlaps Capri's screen
     const here = (w) => w.x < bounds.width && w.x + w.w > 0 && w.y < bounds.height && w.y + w.h > 0;
     const wins = last.wins.map((w) => toOverlay(w, bounds)).filter(here);
-    // the Mac's Dock, while it's shown at the bottom of her screen
+    // the Dock, while it's shown at the bottom of her screen
     const dock = last.dock && toOverlay({ ...last.dock, id: 'dock' }, bounds);
     onUpdate({
-      fg: last.fg, taskbar: Boolean(last.taskbar), ai: Array.isArray(last.ai) ? last.ai : [],
+      fg: last.fg, ai: Array.isArray(last.ai) ? last.ai : [],
       game: last.game || null, usb: Array.isArray(last.usb) ? last.usb : [], plug: last.plug || null,
       dock: dock && here(dock) ? dock : null, space: last.space ?? 0, here: last.here !== false, pid: last.pid || 0,
       titles: last.titles !== false, app: last.app || '', wins,
@@ -70,7 +41,8 @@ function startWindowWatch({ overlay, onUpdate }) {
   };
 
   const start = () => {
-    child = spawn(command.file, command.args, { windowsHide: true, stdio: [command.stdin, 'pipe', 'pipe'] });
+    // stdin stays open: the helper stops when it closes, even if she crashed
+    child = spawn(mac.HELPER, ['watch', self, String(process.pid)], { stdio: ['pipe', 'pipe', 'pipe'] });
 
     readline.createInterface({ input: child.stdout }).on('line', (line) => {
       try {
@@ -94,7 +66,7 @@ function startWindowWatch({ overlay, onUpdate }) {
       stopped = true;
       child?.kill();
     },
-    // her window moved (another screen, the taskbar in it or not): the same windows, from there
+    // her window moved (another screen): the same windows, from there
     refresh: send,
   };
 }

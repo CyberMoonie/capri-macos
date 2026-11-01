@@ -4,7 +4,7 @@ import { linesFor, ASSISTANT_NAMES } from './lines.js';
 import { pick, fmt, duration, basename, rand } from './util.js';
 
 const EDIT_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
-const HACKING_TOOLS = new Set(['Bash', 'PowerShell', 'WebFetch', 'WebSearch', 'Agent', 'Task']);
+const HACKING_TOOLS = new Set(['Bash', 'WebFetch', 'WebSearch', 'Agent', 'Task']);
 const WORKING_EVERY = 20; // say something about progress every N tool calls
 const LONG_JOB_MS = 8 * 60 * 1000; // a job this long (or this busy) earns the whole satellite sequence
 const LONG_JOB_ACTIONS = 50;
@@ -311,7 +311,7 @@ export class Brain {
   }
 
   // Is the window you typed your prompt in (Claude's) no longer the one in front?
-  // Unknown (no window tracking, macOS / Linux) counts as no.
+  // Unknown (no window tracking yet) counts as no.
   away(s) {
     const { fg } = this.capri.windows;
     return Boolean(s.window && fg && fg !== s.window);
@@ -454,7 +454,7 @@ export class Brain {
         target = basename(input.file_path); break;
       case 'NotebookEdit':
         target = basename(input.notebook_path); break;
-      case 'Bash': case 'PowerShell':
+      case 'Bash':
         target = input.description || input.command; break;
       case 'Grep':
         target = input.pattern ? `“${input.pattern}”` : ''; break;

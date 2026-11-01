@@ -104,7 +104,7 @@ function mapTool(toolCall) {
       };
     case "run_command":
       return {
-        tool_name: "PowerShell",
+        tool_name: "Bash",
         tool_input: {
           command: String(args.CommandLine || "").slice(0, 280),
           description: String(args.toolSummary || args.CommandLine || "").slice(0, 280),
@@ -179,7 +179,7 @@ function buildEvents(payload) {
     const filePath = mapped.tool_input?.file_path || "";
 
     if (toolName === "run_command") {
-      const cmd = mapped.tool_input.command || mapped.tool_input.description || "PowerShell";
+      const cmd = mapped.tool_input.command || mapped.tool_input.description || "Bash";
       events.push({
         delay: 350,
         evt: {

@@ -7,7 +7,6 @@ const path = require('node:path');
 const { spawn, execFileSync } = require('node:child_process');
 const { once } = require('node:events');
 
-const { overlayArea } = require('../src/main/area');
 const { TRAY } = require('../src/main/labels');
 const mac = require('../src/main/mac');
 
@@ -28,77 +27,45 @@ function withElectron() {
   return home;
 }
 
-// A 1512×982 Mac screen with a 33 pt menu bar.
-const screen = (workArea) => ({ bounds: { x: 0, y: 0, width: 1512, height: 982 }, workArea });
-
-test('her window on a Mac: the work area, never over the menu bar nor the Dock, wherever she rests', () => {
-  const layouts = {
-    'Dock at the bottom, always shown': { x: 0, y: 33, width: 1512, height: 883 },
-    'Dock hidden until the pointer reaches it': { x: 0, y: 33, width: 1512, height: 949 },
-    'Dock on the left': { x: 80, y: 33, width: 1432, height: 949 },
-    'Dock on the right': { x: 0, y: 33, width: 1432, height: 949 },
-    'menu bar hidden too': { x: 0, y: 0, width: 1512, height: 982 },
-  };
-  for (const [what, workArea] of Object.entries(layouts)) {
-    for (const rest of ['corner', 'taskbar']) {
-      assert.deepEqual(overlayArea(screen(workArea), rest, 'darwin'), { area: workArea, gap: 0 }, `${what}, ${rest}`);
-    }
-  }
-  // a second screen, left of the main one and higher (negative coordinates)
-  const left = { bounds: { x: -1920, y: -200, width: 1920, height: 1080 }, workArea: { x: -1920, y: -175, width: 1920, height: 1055 } };
-  assert.deepEqual(overlayArea(left, 'taskbar', 'darwin'), { area: left.workArea, gap: 0 });
-});
-
-test('her window on Windows is unchanged: the work area, or the whole screen less its top row', () => {
-  const s = { bounds: { x: 0, y: 0, width: 1920, height: 1080 }, workArea: { x: 0, y: 0, width: 1920, height: 1032 } };
-  assert.deepEqual(overlayArea(s, 'corner', 'win32'), { area: s.workArea, gap: 0 });
-  assert.deepEqual(overlayArea(s, 'taskbar', 'win32'), { area: { x: 0, y: 1, width: 1920, height: 1079 }, gap: 48 });
-});
-
-test('her menu on a Mac speaks of macOS in every language, never of Windows', () => {
-  const keys = Object.keys(TRAY.en.mac).sort();
+test('her menu speaks of macOS in every language, with the same items in each', () => {
+  const keys = Object.keys(TRAY.en).sort();
   for (const [lang, labels] of Object.entries(TRAY)) {
-    assert.deepEqual(Object.keys(labels.mac).sort(), keys, lang);
-    const shown = { ...labels, ...labels.mac };
-    for (const key of ['startup', 'motionAuto', 'restTaskbar', 'pcReact']) assert.doesNotMatch(shown[key], /Windows|PC|ПК/, `${lang}.${key}`);
-    assert.match(shown.restTaskbar, /Dock/, lang);
+    assert.deepEqual(Object.keys(labels).sort(), keys, lang);
+    const words = Object.values(labels).filter((v) => typeof v === 'string').join('\n');
+    assert.doesNotMatch(words, /Windows|\bPC\b|ПК|taskbar|barre des tâches|barra de tareas|barra de tarefas|панел\S* задач/, lang);
+    assert.match(labels.restDock, /Dock/, lang);
+    assert.match(labels.motionAuto, /macOS/, lang);
   }
 });
 
-test('her lines on a Mac: the Dock, Finder, the keychain, System Settings; no Windows, no PC, no Ctrl+Alt+C', async () => {
-  const { LINES, linesFor, setPlatform } = await import(moduleUrl(path.join(__dirname, '../src/renderer/js/lines.js')));
+test('her lines: the Dock, Finder, the keychain, System Settings; nothing of Windows, in every language', async () => {
+  const { LINES, linesFor } = await import(moduleUrl(path.join(__dirname, '../src/renderer/js/lines.js')));
   const strings = (value) => (typeof value === 'string' ? [value] : value && typeof value === 'object' ? Object.values(value).flatMap(strings) : []);
-  const shape = (value) => (value && typeof value === 'object' && !Array.isArray(value)
-    ? Object.fromEntries(Object.entries(value).map(([k, v]) => [k, shape(v)])) : typeof value);
+  // two levels deep: below that, plurals differ between languages (an array, or Russian's forms)
+  const shape = (value, depth = 0) => (value && typeof value === 'object' && !Array.isArray(value) && depth < 2
+    ? Object.fromEntries(Object.entries(value).map(([k, v]) => [k, shape(v, depth + 1)])) : typeof value);
   // things only Windows has, in the five languages
-  const WINDOWS = /Windows|\bPC\b|ПК|Ctrl\+Alt\+C|Start menu|menu Démarrer|menú Inicio|menu Iniciar|«Пуск»|taskbar|barre des tâches|barra de tareas|barra de tarefas|панел\S* задач|\^/;
-  try {
-    setPlatform('darwin');
-    for (const lang of Object.keys(LINES)) {
-      for (const assistant of ['claude', 'codex', 'agy']) {
-        const t = linesFor(lang, assistant);
-        const shown = strings(t).filter((s) => WINDOWS.test(s));
-        assert.deepEqual(shown, [], `${lang}/${assistant}`);
-        assert.ok(t.mac.screen && t.mac.screenHow && t.mac.access && t.mac.accessHow && t.mac.settings, lang);
-        assert.match(t.chat.shot, /\{name\}/, lang);
-        assert.match(t.chat.shot, /\{where\}/, lang);
-        assert.match(t.pc.usb[0], /\(\{drive\}\)/, lang); // a name, not a drive letter and its colon
-      }
-      // the Mac's lines have all the keys the others have, and nothing goes missing
-      const { mac: _, ...rest } = shape(linesFor(lang));
-      assert.deepEqual(rest, shape(LINES[lang]), lang);
+  const WINDOWS = /Windows|\bPC\b|ПК|Ctrl\+Alt\+C|Start menu|menu Démarrer|menú Inicio|menu Iniciar|«Пуск»|taskbar|barre des tâches|barra de tareas|barra de tarefas|панел\S* задач|winget|Explorer|\^/;
+  for (const lang of Object.keys(LINES)) {
+    for (const assistant of ['claude', 'codex', 'agy']) {
+      const t = linesFor(lang, assistant);
+      assert.deepEqual(strings(t).filter((s) => WINDOWS.test(s)), [], `${lang}/${assistant}`);
+      const p = t.permission;
+      assert.ok(p.screen && p.screenHow && p.access && p.accessHow && p.settings, lang);
+      assert.ok(t.chat.folders.finder && t.chat.folders.trash, lang);
+      assert.match(t.chat.shot, /\{name\}/, lang);
+      assert.match(t.chat.shot, /\{where\}/, lang);
+      assert.match(t.pc.usb[0], /\(\{drive\}\)/, lang); // a volume's name
     }
-    setPlatform('win32');
-    for (const lang of Object.keys(LINES)) assert.equal(linesFor(lang), LINES[lang], `${lang}: untouched on Windows`);
-  } finally {
-    setPlatform('win32');
+    // every language has the same lines as English
+    assert.deepEqual(shape(LINES[lang]), shape(LINES.en), lang);
   }
 });
 
-test('on a Mac, an app on your desktop or anything that runs waits for your click', () => {
+test('an app on your desktop or anything that runs waits for your click', () => {
   const home = withElectron();
   const { risky, match } = require('../src/main/launch');
-  for (const file of ['Tool.app', 'run.command', 'setup.sh', 'Installer.pkg', 'Disk.dmg', 'do.scpt', 'Flow.workflow', 'x.tool', 'go.zsh', 'old.exe']) {
+  for (const file of ['Tool.app', 'run.command', 'setup.sh', 'Installer.pkg', 'Disk.dmg', 'do.scpt', 'Flow.workflow', 'x.tool', 'go.zsh', 'app.jar']) {
     assert.equal(risky({ kind: 'file', id: path.join(home, 'Desktop', file) }), true, file);
   }
   for (const file of ['notes.txt', 'photo.png', 'Report.pages', 'cv.pdf']) {
@@ -123,11 +90,10 @@ test('the Mac helper: one snapshot of your windows, in the shape the overlay rea
   const child = spawn(mac.HELPER, ['watch', '0', String(process.pid)], { stdio: ['pipe', 'pipe', 'inherit'] });
   const [chunk] = await once(child.stdout, 'data');
   const snap = JSON.parse(String(chunk).split('\n')[0]);
-  for (const key of ['fg', 'taskbar', 'ai', 'game', 'usb', 'plug', 'dock', 'space', 'overview', 'here', 'wins']) assert.ok(key in snap, key);
+  for (const key of ['fg', 'pid', 'app', 'ai', 'game', 'usb', 'plug', 'dock', 'space', 'overview', 'titles', 'here', 'wins']) assert.ok(key in snap, key);
   assert.equal(snap.space, 0); // no desktop switch yet
   assert.equal(typeof snap.overview, 'boolean');
   assert.equal(typeof snap.fg, 'number');
-  assert.equal(snap.taskbar, false);
   assert.ok(Array.isArray(snap.ai) && Array.isArray(snap.usb) && Array.isArray(snap.wins));
   for (const w of snap.wins) {
     for (const key of ['id', 'x', 'y', 'w', 'h']) assert.equal(typeof w[key], 'number', key);
@@ -169,11 +135,11 @@ test('another AI spotted in the title of the window in front, whatever the brows
   assert.deepEqual(aisIn(undefined), []);
 });
 
-test('her chat on a Mac: pause and play said plainly, her picks, "from spotify", and "play it"', async (t) => {
+test('her chat: pause and play said plainly, her picks, "from spotify", and "play it"', async (t) => {
   globalThis.matchMedia = () => ({ matches: false, addEventListener() {} });
   t.after(() => { delete globalThis.matchMedia; });
   const { Chat } = await import(moduleUrl(path.join(__dirname, '../src/renderer/js/chat.js')));
-  const chat = new Chat({ capri: { platform: 'darwin' }, panel: {}, voice: {}, host: { onChatDelta() {} }, brain: {} });
+  const chat = new Chat({ capri: {}, panel: {}, voice: {}, host: { onChatDelta() {} }, brain: {} });
   const asked = (text) => chat.asked(text);
   for (const text of ['pause', 'pause the music', 'stop the music']) assert.deepEqual(asked(text), { kind: 'media', action: 'pause' }, text);
   for (const text of ['play', 'play.', 'play the music', 'play music', 'play spotify', 'resume', 'unpause']) {
@@ -195,9 +161,6 @@ test('her chat on a Mac: pause and play said plainly, her picks, "from spotify",
   assert.deepEqual(asked('put it on youtube'), { kind: 'youtube', song: 'Queen - Bohemian Rhapsody' });
   assert.deepEqual(asked('play that on spotifu'), { kind: 'music', song: 'Queen - Bohemian Rhapsody' });
   assert.deepEqual(asked('play daft punk on spotfy'), { kind: 'music', song: 'daft punk' });
-  // on Windows, "play the music" still goes to her (no player to ask there)
-  const win = new Chat({ capri: { platform: 'win32' }, panel: {}, voice: {}, host: { onChatDelta() {} }, brain: {} });
-  assert.equal(win.asked('play the music'), null);
 });
 
 test('a song she names in her answer without her tag is still found', async () => {

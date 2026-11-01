@@ -1,6 +1,6 @@
-// She lives in your PC, so she feels it: the processor maxed out, the charger, the battery, the
+// She lives in your Mac, so she feels it: the processor maxed out, the charger, the battery, the
 // network, things you plug in (a USB stick, a phone, a controller...) and the games you play.
-// Her menu › React to my PC turns it off.
+// Her menu › React to my Mac turns it off.
 
 import { pick, fmt } from './util.js';
 
@@ -16,10 +16,10 @@ const RESTOW_AFTER = 15000; // brought out while you play, then left be this lon
 const PHONE = /phone|iphone|apple|galaxy|samsung|pixel|xiaomi|redmi|poco|oneplus|huawei|honor|motorola|oppo|vivo|realme|nokia|xperia|android|mobile|t[ée]l[ée]phone|celular|телефон/i;
 const PAD = /controller|gamepad|manette|mando|controle|xbox|dualsense|dualshock|joy-?con|геймпад/i;
 
-// what was plugged in, from the name and the class Windows gives it
+// what was plugged in, from its name and the class her helper gives it
 function kindOf({ name = '', class: cls = '' }) {
   if (PAD.test(name)) return 'controller';
-  if (cls === 'DiskDrive' || cls === 'Volume') return 'drive'; // USB sticks: by their drive letter
+  if (cls === 'DiskDrive' || cls === 'Volume') return 'drive'; // USB sticks: by their volume
   if (cls === 'WPD' || PHONE.test(name)) return 'phone';
   if (cls === 'AudioEndpoint' || cls === 'MEDIA') return 'audio';
   if (cls === 'Camera' || cls === 'Image') return 'camera';
@@ -40,7 +40,7 @@ export class Pc {
     this.warned = 1; // lowest battery level she warned about (1: none yet)
     this.cutOff = false;
     this.drives = null;
-    this.plugs = null; // count of plug events seen (windows.ps1)
+    this.plugs = null; // count of plug events seen (her helper)
     this.plugAt = -Infinity;
     this.game = null;
     this.gameMode = 'hide'; // her menu › During games: 'hide' (gone until you stop) or 'chip' (small, in her corner)
@@ -149,8 +149,7 @@ export class Pc {
     if (this.capri.free) this.capri.perform('hop');
   }
 
-  // what windows.ps1 (or the Mac's helper) sees: USB sticks by letter (by name on a Mac), devices
-  // plugged in or out, the game in front
+  // what her helper sees: USB sticks by name, devices plugged in or out, the game in front
   onWindows({ usb = [], plug = null, game = null }) {
     if (!this.enabled) {
       this.drives = usb;
@@ -180,8 +179,7 @@ export class Pc {
   // a USB stick: she dives into it to have a look
   async stick(drive) {
     this.capri.wake();
-    // a drive letter ("E:") on Windows, its name on a Mac
-    this.say(fmt(pick(this.t.usb), { drive: /^[a-z]$/i.test(drive) ? `${drive}:` : drive }), 'look', 2500);
+    this.say(fmt(pick(this.t.usb), { drive }), 'look', 2500);
     if (!this.quiet || !(await this.whenFree())) return;
     const { w, h } = this.capri.view;
     if (await this.capri.visit({ x: w - 140, y: h - 6 })) this.say(pick(this.t.usbBack), 'smug', 4500);

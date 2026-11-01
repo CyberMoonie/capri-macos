@@ -1,4 +1,4 @@
-// Setting up who she talks with, with buttons, so nobody has to open a terminal: on this PC
+// Setting up who she talks with, with buttons, so nobody has to open a terminal: on this Mac
 // (Ollama installed, woken up and a model fetched for you, with how far along it is), online with
 // no account (Pollinations), or with a key you paste in her panel. And Claude Code or Codex for
 // free, run through Ollama. Each step is a panel of her guide (guide.js).
@@ -116,20 +116,12 @@ export class Setup {
     return res.error === 'stopped' ? false : this.fail(this.t.pullFailed, res.error);
   }
 
-  // Ollama installed (with winget, on your click) and awake. True once it answers.
+  // Ollama installed (its app from ollama.com, on your click) and awake. True once it answers.
   async ollamaUp() {
     const t = this.t;
     let state = await this.host.ollamaState();
     if (state.running) return true;
     if (!state.installed) {
-      if (!state.winget) {
-        const id = await this.guide.ask({
-          face: 'aside', line: t.noWinget, quote: t.noWingetHow,
-          actions: [{ id: 'site', label: t.site, primary: true }, { id: 'later', label: t.later }],
-        });
-        if (id === 'site') this.host.openOllama();
-        return false;
-      }
       const id = await this.guide.ask({
         face: 'look', line: t.install, quote: t.installHow,
         actions: [{ id: 'install', label: t.installBtn, primary: true }, { id: 'site', label: t.site }, { id: 'later', label: t.later }],
@@ -147,7 +139,7 @@ export class Setup {
     return res.ok ? true : this.fail(t.wakeFailed, t.wakeFailedHow);
   }
 
-  // Which model to fetch: the better one first when the PC has room for it, then Ollama's free cloud
+  // Which model to fetch: the better one first when the Mac has room for it, then Ollama's free cloud
   // ones if you're signed in to it.
   async pickModel(line = this.t.model) {
     const t = this.t;

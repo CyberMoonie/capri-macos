@@ -1,11 +1,11 @@
 // How close she is to you: her sync with you, like a neural link. It grows with the days you spend
-// together, the time you're at your PC with her out, talking to her, the work Claude gets done with
+// together, the time you're at your Mac with her out, talking to her, the work Claude gets done with
 // her watching, the reminders you keep. Each source counts up to so much a day, so it takes a few
 // weeks to go all the way. Five stages; she tells you when you reach a new one, and it shows in what
 // she says, how her chat talks to you, and how jealous she gets.
 //
-// Jealous: she sees you on another AI (the window in front is one of them: windows.ps1 checks the
-// title of the window in front against a short list of AI names, on your PC, and only says which
+// Jealous: she sees you on another AI (the window in front is one of them: her helper checks the
+// title of the window in front against a short list of AI names, on your Mac, and only says which
 // one matched), or Codex working while she watches Claude Code. A moment in front and she notices;
 // a while on it and, once she's attached enough, she goes and sits on its window, glares at you and
 // takes it over for a moment. Then she sulks for a bit: click her and she turns her back on you.
@@ -148,7 +148,7 @@ export class Bond {
   }
 }
 
-// The other AIs she can spot, by the key windows.ps1 gives them.
+// The other AIs she can spot, by the key her helper (or the browser's tab) gives them.
 export const RIVALS = {
   chatgpt: 'ChatGPT', claude: 'Claude', codex: 'Codex', gemini: 'Gemini', copilot: 'Copilot', perplexity: 'Perplexity',
   deepseek: 'DeepSeek', grok: 'Grok', lechat: 'Le Chat', characterai: 'Character.AI', metaai: 'Meta AI',

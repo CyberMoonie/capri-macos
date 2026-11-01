@@ -122,41 +122,32 @@ async function openaiChat(p, { model, messages }, onDelta, signal) {
 }
 
 // --- Claude Code ---------------------------------------------------------------------------------
-// The prompt goes in on stdin, never on the command line: the shell (needed for an npm claude.cmd)
-// only ever sees fixed arguments.
+// The prompt goes in on stdin, never on the command line.
 
-const quote = (s) => (process.platform === 'win32' ? `"${s}"` : s); // cmd joins the arguments
 // its session id, picked here so her hooks can tell its events from your other sessions' (main.js)
 let claudeSession = null;
 let claudeStarted = false; // each message after the first continues the same conversation
 
 async function claudeVersion() {
-  await pathReady(); // on a Mac started from Finder, `claude` is on the PATH your shell gives
+  await pathReady(); // started from Finder, `claude` is on the PATH your shell gives
   return new Promise((resolve, reject) => {
-    execFile('claude', ['--version'], { shell: process.platform === 'win32', timeout: 10000 }, (err, out) => (
+    execFile('claude', ['--version'], { timeout: 10000 }, (err, out) => (
       err ? reject(new Error('Claude Code not found (is `claude` on your PATH?)')) : resolve(out.trim())));
   });
 }
 
 function claudeChat(cfg, text, persona, onDelta, signal) {
-  // her persona, from a file: too long and too full of quotes and newlines for cmd's command line
+  // her persona, from a file: too long and too full of quotes and newlines for a command line
   const personaFile = path.join(os.tmpdir(), 'capri-persona.txt');
   fs.writeFileSync(personaFile, persona);
   const args = ['-p', '--output-format', 'stream-json', '--verbose',
     '--permission-mode', CLAUDE_MODES.includes(cfg.claudeMode) ? cfg.claudeMode : 'default',
-    '--append-system-prompt-file', quote(personaFile)];
+    '--append-system-prompt-file', personaFile];
   if (!claudeSession) claudeSession = randomUUID();
   args.push(claudeStarted ? '--resume' : '--session-id', claudeSession);
   return new Promise((resolve, reject) => {
-    const child = spawn('claude', args, {
-      cwd: cfg.claudeCwd || os.homedir(),
-      shell: process.platform === 'win32',
-      windowsHide: true,
-    });
-    const kill = () => (process.platform === 'win32'
-      ? execFile('taskkill', ['/pid', String(child.pid), '/t', '/f'], () => {})
-      : child.kill());
-    signal.addEventListener('abort', kill, { once: true });
+    const child = spawn('claude', args, { cwd: cfg.claudeCwd || os.homedir() });
+    signal.addEventListener('abort', () => child.kill(), { once: true });
     let buffer = '';
     let all = '';
     let result = null;
@@ -218,7 +209,7 @@ async function chat(id, cfg, { model, messages }, onDelta, signal) {
   return openaiChat(p, { model, messages }, onDelta, signal);
 }
 
-// Whether her answers stay on this PC: a server on this machine (and with Ollama, not a cloud model).
+// Whether her answers stay on this Mac: a server on this machine (and with Ollama, not a cloud model).
 function isLocal(id, cfg, model) {
   if (id === 'ollama') {
     return !ollama.isCloud(model) && /^(https?:\/\/)?(127\.0\.0\.1|localhost|0\.0\.0\.0|\[?::1\]?)(:|\/|$)/.test(process.env.OLLAMA_HOST || '127.0.0.1');

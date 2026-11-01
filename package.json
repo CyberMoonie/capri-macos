@@ -1,11 +1,22 @@
 {
-  "name": "capri-desktop",
-  "version": "0.4.4",
-  "description": "Capri, the Project Capricorn construct, living on your desktop and narrating what Claude Code is doing.",
-  "author": "mochiiwuff",
-  "repository": "github:mochiiwuff/capri-desktop",
+  "name": "capri-macos",
+  "productName": "Capri",
+  "version": "1.0.0",
+  "description": "Capri, the Project Capricorn construct, living on your Mac and narrating what Claude Code is doing. An unofficial macOS port of mochiiwuff/capri-desktop.",
+  "author": "CyberMoonie",
+  "contributors": [
+    {
+      "name": "mochiiwuff",
+      "url": "https://github.com/mochiiwuff",
+      "role": "original Capri (Windows)"
+    }
+  ],
+  "repository": "github:CyberMoonie/capri-macos",
   "main": "src/main/main.js",
   "private": true,
+  "os": [
+    "darwin"
+  ],
   "scripts": {
     "prestart": "node scripts/build-mac-helper.js",
     "start": "electron .",
@@ -19,15 +30,15 @@
     "hooks:agy:install": "node scripts/install-hooks-agy.js",
     "hooks:agy:uninstall": "node scripts/install-hooks-agy.js --uninstall",
     "check:llm": "node scripts/check-llm.js",
+    "test": "node --test tests/",
     "test:hooks": "node --test tests/hooks.test.js",
-    "dist": "electron-builder --win",
-    "dist:mac": "node scripts/build-mac-helper.js --universal && electron-builder --mac",
-    "test": "node --test tests/"
+    "dist": "node scripts/build-mac-helper.js --universal && electron-builder --mac"
   },
   "keywords": [
     "claude-code",
     "desktop-pet",
     "electron",
+    "macos",
     "cyberpunk",
     "edgerunners"
   ],
@@ -57,21 +68,8 @@
     ],
     "asarUnpack": [
       "hooks/**",
-      "src/main/windows.ps1",
       "src/main/mac/capri-helper"
     ],
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icons/capri.ico"
-    },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "runAfterFinish": true,
-      "createDesktopShortcut": true,
-      "shortcutName": "Capri",
-      "artifactName": "Capri-Setup-${version}.${ext}"
-    },
     "mac": {
       "target": [
         {

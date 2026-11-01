@@ -72,7 +72,7 @@ export const LINES = {
       note: 'Réponses générées par une IA locale. Ce n’est pas la vraie Capri.',
       noteCloud: 'Réponses générées par une IA en ligne. Ce n’est pas la vraie Capri.',
       offline: 'Je n’arrive pas à joindre Ollama.',
-      offlineHow: 'Pour me parler, installe Ollama (ollama.com) et ouvre-le, puis dans un terminal : ollama pull llama3.2\nTout reste sur ton PC.',
+      offlineHow: 'Pour me parler, installe Ollama (ollama.com) et ouvre-le, puis dans un terminal : ollama pull llama3.2\nTout reste sur ton Mac.',
       noModel: 'Ollama n’a encore aucun modèle.',
       noModelHow: 'Dans un terminal : ollama pull llama3.2 (environ 2 Go). Puis reparle-moi.',
       getOllama: 'Télécharger Ollama', ok: 'Compris',
@@ -85,21 +85,21 @@ export const LINES = {
       // fermer une appli que tu lui demandes de fermer, après ton clic
       closeIt: 'Fermer {app}', no: 'Non',
       closed: '{app} : flatliné. C’est fait.',
-      stillOpen: '{app} tourne encore : il se cache dans la zone de notification, ou il te demande d’enregistrer quelque chose.',
+      stillOpen: '{app} tourne encore : il te demande sûrement d’enregistrer quelque chose.',
       force: 'Forcer la fermeture', leave: 'Laisser',
       forced: '{app} : coupé net.',
       unkillable: '{app} résiste. Ferme-le toi-même depuis le Gestionnaire des tâches.',
-      notFound: 'Je ne vois pas « {app} » ouvert sur ton PC.',
+      notFound: 'Je ne vois pas « {app} » ouvert sur ton Mac.',
       // ouvrir une appli ou un jeu, la musique, un site
-      openIt: 'Ouvrir {app}', opened: '{app} : c’est parti.', notInstalled: 'Je ne trouve pas « {app} » sur ton PC.',
+      openIt: 'Ouvrir {app}', opened: '{app} : c’est parti.', notInstalled: 'Je ne trouve pas « {app} » sur ton Mac.',
       music: 'Je cherche « {song} » sur Spotify.', siteIt: 'Ouvrir {site}', siteOpened: '{site} : ouvert.',
       youtube: 'C’est parti : {title}.', youtubeSearch: 'Je te cherche « {song} » sur YouTube.',
       web: 'Je cherche « {query} » sur Google.',
       robloxPlay: 'Je te lance {game} sur Roblox.', robloxPage: '{game} : je t’ouvre sa page Roblox.', robloxNone: 'Je ne trouve pas « {game} » sur Roblox.',
-      filesFound: 'J’ai trouvé {count} fichiers : {list}.', fileFound: 'Trouvé : {list}.', filesNone: 'Rien trouvé pour « {query} » sur ton PC.',
-      showFolder: 'Voir le dossier', shot: 'Capture faite : {name} (dans Images › Screenshots).',
+      filesFound: 'J’ai trouvé {count} fichiers : {list}.', fileFound: 'Trouvé : {list}.', filesNone: 'Rien trouvé pour « {query} » sur ton Mac.',
+      showFolder: 'Voir le dossier', shot: 'Capture faite : {name} ({where}).',
       folderOpened: 'Voilà son dossier : {name}.',
-      folders: { explorer: 'L’explorateur', recycle: 'La corbeille', downloads: 'Tes téléchargements', desktop: 'Ton bureau', documents: 'Tes documents', pictures: 'Tes images', music: 'Ta musique', videos: 'Tes vidéos' },
+      folders: { finder: 'Le Finder', trash: 'La corbeille', downloads: 'Tes téléchargements', desktop: 'Ton bureau', documents: 'Tes documents', pictures: 'Tes images', music: 'Ta musique', videos: 'Tes vidéos' },
       media: { pausedAlready: 'C’est déjà en pause.', playingAlready: 'Ça joue déjà.', pause: 'Pause.', play: 'Ça repart.', next: 'Suivante.', previous: 'Précédente.', volup: 'Plus fort.', voldown: 'Moins fort.', mute: 'J’ai appuyé sur muet.' },
     },
     // sa carte de rapport : ce que Claude a abattu aujourd'hui (son menu, ou d'elle-même le soir)
@@ -134,7 +134,7 @@ export const LINES = {
       zap: 'Moi, une petite peste ?',
       possess: 'Cette fenêtre est à moi.',
       sleep: 'Une petite sieste…',
-      chip: 'Ctrl+Alt+C, et je me range là.',
+      chip: '⌃⌥C, et je me range là.',
       end: 'Fin de la démo. À toi, choom.',
     },
     // her welcome panel (first launch, or "How does it work?" in her menu)
@@ -145,9 +145,9 @@ export const LINES = {
       menu: { line: 'Je te montre quoi ?', quote: 'Choisis, je t’emmène.' },
       topics: { connect: 'Me brancher à Claude', icon: 'Où est mon icône ?', claude: 'Où est Claude ?', folder: 'Le dossier de Claude', talk: 'Me parler', custom: 'Me personnaliser', close: 'Rien, merci' },
       icon: {
-        line: 'Mon icône, c’est là, près de l’horloge.',
+        line: 'Mon icône, c’est là-haut, dans la barre des menus.',
         quote: 'Clic dessus : mon menu. Clic droit sur moi, c’est le même.',
-        hidden: 'Windows la cache souvent derrière le ^ à côté de l’horloge : clique dessus, je suis dedans. Sinon, clic droit sur moi : c’est le même menu.',
+        hidden: 'Quand la barre des menus est pleine (ou qu’il y a l’encoche), macOS la cache. Clic droit sur moi : c’est le même menu.',
       },
       claude: {
         there: 'Claude, c’est cette fenêtre-là.',
@@ -163,28 +163,26 @@ export const LINES = {
         empty: 'Pas encore de settings.json : il apparaîtra quand tu me brancheras.',
         hook: 'Pas besoin d’y toucher à la main.',
         hookHow: 'Pour me débrancher : clic droit sur moi › « Retirer les hooks Claude Code ». Les fichiers .capri-backup sont des copies faites avant que j’y touche.',
-        missing: 'Pas de dossier Claude sur ce PC.',
+        missing: 'Pas de dossier Claude sur ce Mac.',
         missingHow: 'Il apparaît quand Claude Code est installé et lancé une fois. Après, je pourrai m’y brancher.',
       },
     },
     // la mettre en route avec des boutons (setup.js) : Ollama, un modèle, une clé
     setup: {
       who: 'Pour te parler, il me faut une IA.',
-      why: { noOllama: 'Ollama n’est pas installé sur ce PC.', asleep: 'Ollama est installé, mais il dort.', noModel: 'Ollama n’a pas encore de modèle.' },
-      whoHow: 'Le plus simple : sur ton PC, avec Ollama. C’est gratuit, et rien ne sort de chez toi.\nSinon : en ligne sans compte, ou avec la clé d’un service.',
-      local: 'Sur mon PC', online: 'En ligne, sans compte', key: 'J’ai une clé', later: 'Plus tard', back: 'Retour', other: 'Une autre IA', ok: 'Compris', talk: 'Parler',
+      why: { noOllama: 'Ollama n’est pas installé sur ce Mac.', asleep: 'Ollama est installé, mais il dort.', noModel: 'Ollama n’a pas encore de modèle.' },
+      whoHow: 'Le plus simple : sur ton Mac, avec Ollama. C’est gratuit, et rien ne sort de chez toi.\nSinon : en ligne sans compte, ou avec la clé d’un service.',
+      local: 'Sur mon Mac', online: 'En ligne, sans compte', key: 'J’ai une clé', later: 'Plus tard', back: 'Retour', other: 'Une autre IA', ok: 'Compris', talk: 'Parler',
       install: 'J’installe Ollama ?',
-      installHow: 'C’est lui qui fait tourner l’IA sur ton PC. Environ 1 Go, une ou deux minutes. Windows peut te demander de confirmer.',
+      installHow: 'C’est lui qui fait tourner l’IA sur ton Mac. Une ou deux minutes, et il va dans tes Applications.',
       installBtn: 'Installer', site: 'Le site d’Ollama',
-      noWinget: 'Je ne peux pas l’installer moi-même sur ce PC.',
-      noWingetHow: 'Télécharge Ollama sur son site et installe-le, puis reparle-moi : je ferai le reste.',
       installing: 'J’installe Ollama…', installingHow: 'Ça prend une minute ou deux. Ne ferme rien.',
       installFailed: 'L’installation n’a pas marché.',
       waking: 'Je réveille Ollama…', wakingHow: 'Ça prend quelques secondes.',
-      wakeFailed: 'Ollama ne se réveille pas.', wakeFailedHow: 'Ouvre-le depuis le menu Démarrer, puis reparle-moi.',
+      wakeFailed: 'Ollama ne se réveille pas.', wakeFailedHow: 'Ouvre-le depuis tes Applications, puis reparle-moi.',
       model: 'Il me faut un modèle. C’est mon cerveau, en gros.',
       bigger: 'Un plus gros, alors. Lequel ?',
-      modelHow: 'gemma3 parle mieux les autres langues que l’anglais. llama3.2 est plus léger, pour les petits PC.',
+      modelHow: 'gemma3 parle mieux les autres langues que l’anglais. llama3.2 est plus léger, pour les petits Mac.',
       cloudFree: 'gratuit, en ligne',
       cloudHow: 'Ceux marqués « en ligne » tournent chez Ollama, avec ton compte : rien à télécharger, mais tes messages passent par leurs serveurs.',
       pulling: 'Je télécharge {model}…', pullStart: 'Ça démarre…',
@@ -193,7 +191,7 @@ export const LINES = {
       which: 'Quel service ?',
       whichHow: 'Groq et Gemini ont une offre gratuite : un compte, une clé, et c’est parti.',
       paste: 'Colle ta clé {name} ici.',
-      pasteHow: 'Je la garde sur ce PC, chiffrée avec ton compte Windows.',
+      pasteHow: 'Je la garde sur ce Mac, dans ton trousseau.',
       placeholder: 'Ta clé API…', save: 'Enregistrer', where: 'Où la trouver ?',
       keyTag: 'CLÉ', keyNote: 'Elle ne part que vers ce service, jamais ailleurs.',
       keyBad: 'Ça ne passe pas avec cette clé :',
@@ -207,7 +205,7 @@ export const LINES = {
       gb: 'Go', mb: 'Mo',
       free: 'Gratuit avec Ollama',
       freeLine: '{name} gratuit, avec Ollama.',
-      freeHow: 'J’ouvre une fenêtre où Ollama lance {name}. Choisis-y un modèle : ceux marqués « cloud » vont plus vite sur un petit PC (il faut un compte Ollama). Dès qu’il travaille, je te montre ce qu’il fait.',
+      freeHow: 'J’ouvre une fenêtre où Ollama lance {name}. Choisis-y un modèle : ceux marqués « cloud » vont plus vite sur un petit Mac (il faut un compte Ollama). Dès qu’il travaille, je te montre ce qu’il fait.',
       freeBtn: 'Ouvrir la fenêtre',
       freeOpened: 'Fenêtre ouverte.',
       freeOpenedHow: 'Choisis un modèle dedans. Dès que {name} fait quelque chose, je te le dis.',
@@ -239,16 +237,16 @@ export const LINES = {
     welcome: {
       hi: 'Salut, moi c’est Capri.',
       alone: 'Pas de Claude Code ici, pas de boulot : je reste juste sur ton bureau avec toi.',
-      about: 'Je vis sur ton bureau et je réagis à ce que fait Claude Code sur ce PC. Sans lui, je traîne juste dans le coin, et c’est très bien aussi.',
+      about: 'Je vis sur ton bureau et je réagis à ce que fait Claude Code sur ce Mac. Sans lui, je traîne juste dans le coin, et c’est très bien aussi.',
       connect: 'Tu veux que je me branche sur Claude Code ? Un clic, puis ferme complètement Claude Code et rouvre-le.',
-      noClaude: 'Je ne trouve pas Claude Code sur ce PC (il faut un abonnement Claude). Sans lui, je reste juste là à vivre ma vie.',
-      menu: 'Clic droit sur moi pour mon menu. Ctrl+Alt+C pour me ranger.',
+      noClaude: 'Je ne trouve pas Claude Code sur ce Mac (il faut un abonnement Claude). Sans lui, je reste juste là à vivre ma vie.',
+      menu: 'Clic droit sur moi pour mon menu. ⌃⌥C pour me ranger.',
       connectBtn: 'Me brancher', later: 'Plus tard', whatClaude: 'C’est quoi Claude Code ?', justHang: 'Juste traîner', ok: 'Compris',
       connected: 'Branchée !',
       restart: 'Maintenant ferme complètement Claude Code et rouvre-le (une nouvelle session). Dès qu’il fait quelque chose, je te le dis.',
       linked: 'Je vois Claude ! On est connectés.',
       ready: 'Je suis branchée sur Claude Code.',
-      readyHow: 'Dès qu’il travaille, je te montre ce qu’il fait. Clic droit sur moi pour mon menu. Ctrl+Alt+C pour me ranger.',
+      readyHow: 'Dès qu’il travaille, je te montre ce qu’il fait. Clic droit sur moi pour mon menu. ⌃⌥C pour me ranger.',
       afterInstall: 'Quand tu l’as, fais clic droit sur moi › « Installer les hooks Claude Code ».',
       failed: 'Je n’ai pas pu me brancher : {error}',
     },
@@ -266,7 +264,7 @@ export const LINES = {
     },
     // passée sur ton autre écran pour te suivre
     screens: { hello: ['Coucou, l’autre écran.', 'Tu bosses ici maintenant ? J’arrive.', 'Me voilà.'] },
-    // elle réagit à ton PC (pc.js) : processeur, batterie, réseau, clé USB, jeu
+    // elle réagit à ton Mac (pc.js) : processeur, batterie, réseau, clé USB, jeu
     pc: {
       hot: ['Ton processeur est à fond. Moi aussi, je chauffe.', '{cpu} % de processeur. Il fait chaud là-dedans.', 'Ça chauffe ! Tu fais tourner quoi, là ?'],
       cool: ['Ouf. Ça redescend.'],
@@ -298,13 +296,13 @@ export const LINES = {
     // elle regarde ton écran (look.js) : ce qu'elle te dit avant, et quand ça ne marche pas
     look: {
       ask: 'Je peux jeter un œil à ton écran ?',
-      local: 'Une image de ton écran va à ton IA, sur ce PC ({model}), et je te dis ce que j’en pense. Rien ne sort de chez toi, et je ne garde pas l’image.',
+      local: 'Une image de ton écran va à ton IA, sur ce Mac ({model}), et je te dis ce que j’en pense. Rien ne sort de chez toi, et je ne garde pas l’image.',
       online: 'Une image de ton écran part chez {service} ({model}) pour que je puisse la commenter. Je ne garde pas l’image, mais eux la reçoivent : évite quand tu as des trucs perso à l’écran.',
       auto: 'De temps en temps, quand tu es là et que tu as changé de fenêtre. Tu pourras arrêter dans mon menu.',
       yes: 'Oui, regarde', no: 'Non merci',
       declined: 'D’accord, je ne regarde pas.',
       on: 'D’accord. Je regarderai de temps en temps.',
-      noVision: '{model} ne sait pas lire les images. gemma3 sait, sur ton PC, comme Gemini en ligne : change dans mon menu › Modèle IA.',
+      noVision: '{model} ne sait pas lire les images. gemma3 sait, sur ton Mac, comme Gemini en ligne : change dans mon menu › Modèle IA.',
       noAI: 'Il me faut une IA pour regarder : clic droit sur moi › Modèle IA.',
       failed: 'Je n’ai pas réussi à regarder : {error}',
     },
@@ -349,8 +347,16 @@ export const LINES = {
       sulk: ['Va donc voir {rival}.', 'Je boude. Ça se voit pas ?', 'Hm.'],
       forgive: ['…Bon. Ça va pour cette fois.', 'D’accord, je te pardonne. Un peu.'],
     },
-    // Windows a coupé ses animations : elle bouge à peine, et le dit une fois
-    motion: { line: 'Windows a coupé ses animations, alors je bouge à peine.', quote: 'Tu veux que je bouge quand même ? Tu pourras changer ça dans mon menu › Animations.', full: 'Bouge !', still: 'Reste calme' },
+    // macOS a « Réduire les animations » activé : elle bouge à peine, et le dit une fois
+    motion: { line: 'macOS a « Réduire les animations » activé, alors je bouge à peine.', quote: 'Tu veux que je bouge quand même ? Tu pourras changer ça dans mon menu › Animations.', full: 'Bouge !', still: 'Reste calme' },
+    // what she says when macOS hasn't let her do something yet
+    permission: {
+      screen: 'macOS ne me laisse pas encore voir ton écran.',
+      screenHow: 'Autorise-moi dans Réglages Système › Confidentialité et sécurité › Enregistrement de l’écran et de l’audio du système, puis relance-moi.',
+      access: 'Pour appuyer sur lecture, pause ou suivant, macOS doit me laisser faire.',
+      accessHow: 'Autorise-moi dans Réglages Système › Confidentialité et sécurité › Accessibilité. Le volume, lui, marche déjà.',
+      settings: 'Ouvrir les réglages',
+    },
     status: 'Claude travaille sur {project} depuis {time}.',
     last: 'Dernière action : {action}',
     sessions: '{count} sessions actives',
@@ -360,7 +366,7 @@ export const LINES = {
     hooksFail: 'Impossible de toucher aux hooks : {error}',
     verbs: {
       Read: 'Lit', Write: 'Écrit', Edit: 'Modifie', MultiEdit: 'Modifie', NotebookEdit: 'Modifie',
-      Bash: 'Exécute', PowerShell: 'Exécute', Grep: 'Cherche', Glob: 'Fouille', WebFetch: 'Consulte',
+      Bash: 'Exécute', Grep: 'Cherche', Glob: 'Fouille', WebFetch: 'Consulte',
       WebSearch: 'Recherche', Agent: 'Délègue', Task: 'Délègue', TodoWrite: 'Planifie', Skill: 'Charge',
       AskUserQuestion: 'Demande', ExitPlanMode: 'Propose', default: 'Utilise',
     },
@@ -422,7 +428,7 @@ export const LINES = {
       note: 'Replies generated by a local AI. Not the real Capri.',
       noteCloud: 'Replies generated by an online AI. Not the real Capri.',
       offline: 'I can’t reach Ollama.',
-      offlineHow: 'To talk with me, install Ollama (ollama.com) and open it, then in a terminal: ollama pull llama3.2\nEverything stays on your PC.',
+      offlineHow: 'To talk with me, install Ollama (ollama.com) and open it, then in a terminal: ollama pull llama3.2\nEverything stays on your Mac.',
       noModel: 'Ollama has no model yet.',
       noModelHow: 'In a terminal: ollama pull llama3.2 (about 2 GB). Then talk to me again.',
       getOllama: 'Get Ollama', ok: 'Got it',
@@ -435,21 +441,21 @@ export const LINES = {
       // closing an app you ask her to close, after your click
       closeIt: 'Close {app}', no: 'No',
       closed: '{app}: flatlined. Done.',
-      stillOpen: '{app} is still running: it hides in the tray, or it’s asking you to save something.',
+      stillOpen: '{app} is still running: it’s probably asking you to save something.',
       force: 'Force quit', leave: 'Leave it',
       forced: '{app}: cut off clean.',
       unkillable: '{app} won’t go down. Close it yourself from Task Manager.',
-      notFound: 'I don’t see “{app}” open on your PC.',
+      notFound: 'I don’t see “{app}” open on your Mac.',
       // opening an app or a game, the music, a website
-      openIt: 'Open {app}', opened: '{app}: on it.', notInstalled: 'I can’t find “{app}” on your PC.',
+      openIt: 'Open {app}', opened: '{app}: on it.', notInstalled: 'I can’t find “{app}” on your Mac.',
       music: 'Looking up “{song}” on Spotify.', siteIt: 'Open {site}', siteOpened: '{site}: open.',
       youtube: 'Here you go: {title}.', youtubeSearch: 'Looking up “{song}” on YouTube.',
       web: 'Searching “{query}” on Google.',
       robloxPlay: 'Starting {game} on Roblox for you.', robloxPage: '{game}: opening its Roblox page.', robloxNone: 'Can’t find “{game}” on Roblox.',
-      filesFound: 'Found {count} files: {list}.', fileFound: 'Found it: {list}.', filesNone: 'Nothing for “{query}” on your PC.',
-      showFolder: 'Show the folder', shot: 'Screenshot taken: {name} (in Pictures › Screenshots).',
+      filesFound: 'Found {count} files: {list}.', fileFound: 'Found it: {list}.', filesNone: 'Nothing for “{query}” on your Mac.',
+      showFolder: 'Show the folder', shot: 'Screenshot taken: {name} ({where}).',
       folderOpened: 'Here’s its folder: {name}.',
-      folders: { explorer: 'File Explorer', recycle: 'The recycle bin', downloads: 'Your downloads', desktop: 'Your desktop', documents: 'Your documents', pictures: 'Your pictures', music: 'Your music', videos: 'Your videos' },
+      folders: { finder: 'Finder', trash: 'The Trash', downloads: 'Your downloads', desktop: 'Your desktop', documents: 'Your documents', pictures: 'Your pictures', music: 'Your music', videos: 'Your videos' },
       media: { pausedAlready: 'It’s already paused.', playingAlready: 'It’s already playing.', pause: 'Paused.', play: 'Playing.', next: 'Next one.', previous: 'Previous one.', volup: 'Louder.', voldown: 'Quieter.', mute: 'Hit mute.' },
     },
     // her report card: what Claude got through today (her menu, or on her own in the evening)
@@ -484,7 +490,7 @@ export const LINES = {
       zap: 'Me? A menace?',
       possess: 'This window’s mine now.',
       sleep: 'Quick nap…',
-      chip: 'Ctrl+Alt+C, and I tuck myself away here.',
+      chip: '⌃⌥C, and I tuck myself away here.',
       end: 'That’s the demo. Your turn, choom.',
     },
     // her welcome panel (first launch, or "How does it work?" in her menu)
@@ -495,9 +501,9 @@ export const LINES = {
       menu: { line: 'What should I show you?', quote: 'Pick one, I’ll take you there.' },
       topics: { connect: 'Plug me into Claude', icon: 'Where’s my icon?', claude: 'Where’s Claude?', folder: 'Claude’s folder', talk: 'Talk to me', custom: 'Make me yours', close: 'Nothing, thanks' },
       icon: {
-        line: 'My icon is right there, by the clock.',
+        line: 'My icon is right up there, in the menu bar.',
         quote: 'Click it: my menu. Right-clicking me does the same.',
-        hidden: 'Windows often hides it behind the ^ next to the clock: click that, I’m in there. Or right-click me: same menu.',
+        hidden: 'When the menu bar is full (or there’s a notch), macOS hides it. Right-click me: same menu.',
       },
       claude: {
         there: 'Claude is that window right there.',
@@ -513,28 +519,26 @@ export const LINES = {
         empty: 'No settings.json yet: it shows up when you plug me in.',
         hook: 'No need to touch it by hand.',
         hookHow: 'To unplug me: right-click me › “Remove Claude Code hooks”. The .capri-backup files are copies made before I touched it.',
-        missing: 'No Claude folder on this PC.',
+        missing: 'No Claude folder on this Mac.',
         missingHow: 'It shows up once Claude Code is installed and has run once. Then I can plug in.',
       },
     },
     // setting her up with buttons (setup.js): Ollama, a model, a key
     setup: {
       who: 'To talk with you, I need an AI.',
-      why: { noOllama: 'Ollama isn’t installed on this PC.', asleep: 'Ollama is installed, but it’s asleep.', noModel: 'Ollama has no model yet.' },
-      whoHow: 'Easiest: on your PC, with Ollama. It’s free, and nothing leaves your machine.\nOr online with no account, or with a key from a service.',
-      local: 'On my PC', online: 'Online, no account', key: 'I have a key', later: 'Later', back: 'Back', other: 'Another AI', ok: 'Got it', talk: 'Talk',
+      why: { noOllama: 'Ollama isn’t installed on this Mac.', asleep: 'Ollama is installed, but it’s asleep.', noModel: 'Ollama has no model yet.' },
+      whoHow: 'Easiest: on your Mac, with Ollama. It’s free, and nothing leaves your machine.\nOr online with no account, or with a key from a service.',
+      local: 'On my Mac', online: 'Online, no account', key: 'I have a key', later: 'Later', back: 'Back', other: 'Another AI', ok: 'Got it', talk: 'Talk',
       install: 'Should I install Ollama?',
-      installHow: 'It’s what runs the AI on your PC. About 1 GB, a minute or two. Windows may ask you to confirm.',
+      installHow: 'It’s what runs the AI on your Mac. A minute or two, and it goes in your Applications.',
       installBtn: 'Install', site: 'Ollama’s site',
-      noWinget: 'I can’t install it myself on this PC.',
-      noWingetHow: 'Download Ollama from its site and install it, then talk to me again: I’ll do the rest.',
       installing: 'Installing Ollama…', installingHow: 'It takes a minute or two. Don’t close anything.',
       installFailed: 'The install didn’t work.',
       waking: 'Waking Ollama up…', wakingHow: 'It takes a few seconds.',
-      wakeFailed: 'Ollama won’t wake up.', wakeFailedHow: 'Open it from the Start menu, then talk to me again.',
+      wakeFailed: 'Ollama won’t wake up.', wakeFailedHow: 'Open it from your Applications, then talk to me again.',
       model: 'I need a model. My brain, more or less.',
       bigger: 'A bigger one, then. Which one?',
-      modelHow: 'gemma3 is better in languages other than English. llama3.2 is lighter, for small PCs.',
+      modelHow: 'gemma3 is better in languages other than English. llama3.2 is lighter, for small Macs.',
       cloudFree: 'free, online',
       cloudHow: 'The “online” ones run at Ollama’s, with your account: nothing to download, but your messages go through their servers.',
       pulling: 'Downloading {model}…', pullStart: 'Starting…',
@@ -543,7 +547,7 @@ export const LINES = {
       which: 'Which service?',
       whichHow: 'Groq and Gemini have a free tier: an account, a key, and you’re set.',
       paste: 'Paste your {name} key here.',
-      pasteHow: 'I keep it on this PC, encrypted with your Windows account.',
+      pasteHow: 'I keep it on this Mac, in your keychain.',
       placeholder: 'Your API key…', save: 'Save', where: 'Where do I get one?',
       keyTag: 'KEY', keyNote: 'It only ever goes to that service.',
       keyBad: 'That key didn’t work:',
@@ -557,7 +561,7 @@ export const LINES = {
       gb: 'GB', mb: 'MB',
       free: 'Free with Ollama',
       freeLine: '{name} for free, with Ollama.',
-      freeHow: 'I open a window where Ollama starts {name}. Pick a model there: the ones marked “cloud” are faster on a small PC (they need an Ollama account). As soon as it works, I show you what it’s doing.',
+      freeHow: 'I open a window where Ollama starts {name}. Pick a model there: the ones marked “cloud” are faster on a small Mac (they need an Ollama account). As soon as it works, I show you what it’s doing.',
       freeBtn: 'Open the window',
       freeOpened: 'Window open.',
       freeOpenedHow: 'Pick a model in it. As soon as {name} does something, I’ll tell you.',
@@ -589,16 +593,16 @@ export const LINES = {
     welcome: {
       hi: 'Hey, I’m Capri.',
       alone: 'No Claude Code here, no work: I’ll just hang out on your desktop with you.',
-      about: 'I live on your desktop and react to what Claude Code does on this PC. Without it, I just hang out here, and that’s fine too.',
+      about: 'I live on your desktop and react to what Claude Code does on this Mac. Without it, I just hang out here, and that’s fine too.',
       connect: 'Want me to plug into Claude Code? One click, then close Claude Code completely and open it again.',
-      noClaude: 'I can’t find Claude Code on this PC (it needs a Claude subscription). Without it, I’ll just hang out and live my life.',
-      menu: 'Right-click me for my menu. Ctrl+Alt+C tucks me away.',
+      noClaude: 'I can’t find Claude Code on this Mac (it needs a Claude subscription). Without it, I’ll just hang out and live my life.',
+      menu: 'Right-click me for my menu. ⌃⌥C tucks me away.',
       connectBtn: 'Plug me in', later: 'Later', whatClaude: 'What’s Claude Code?', justHang: 'Just hang out', ok: 'Got it',
       connected: 'Plugged in!',
       restart: 'Now close Claude Code completely and open it again (a new session). As soon as it does something, I’ll tell you.',
       linked: 'I can see Claude! We’re linked.',
       ready: 'I’m plugged into Claude Code.',
-      readyHow: 'Whenever it works, I’ll show you what it’s doing. Right-click me for my menu. Ctrl+Alt+C tucks me away.',
+      readyHow: 'Whenever it works, I’ll show you what it’s doing. Right-click me for my menu. ⌃⌥C tucks me away.',
       afterInstall: 'Once you have it, right-click me › “Install Claude Code hooks”.',
       failed: 'I couldn’t plug in: {error}',
     },
@@ -616,7 +620,7 @@ export const LINES = {
     },
     // over on your other screen, following you
     screens: { hello: ['Hi, other screen.', 'Working over here now? Coming.', 'There you are.'] },
-    // she reacts to your PC (pc.js): processor, battery, network, USB stick, game
+    // she reacts to your Mac (pc.js): processor, battery, network, USB stick, game
     pc: {
       hot: ['Your processor is maxed out. I’m heating up too.', '{cpu}% CPU. It’s getting hot in here.', 'Things are heating up! What are you running?'],
       cool: ['Phew. Cooling down.'],
@@ -648,13 +652,13 @@ export const LINES = {
     // she looks at your screen (look.js): what she tells you first, and when it doesn't work
     look: {
       ask: 'Can I take a look at your screen?',
-      local: 'A picture of your screen goes to your AI, on this PC ({model}), and I tell you what I make of it. Nothing leaves your machine, and I don’t keep the picture.',
+      local: 'A picture of your screen goes to your AI, on this Mac ({model}), and I tell you what I make of it. Nothing leaves your machine, and I don’t keep the picture.',
       online: 'A picture of your screen goes to {service} ({model}) so I can comment on it. I don’t keep it, but they get it: skip it when there’s personal stuff on your screen.',
       auto: 'Now and then, when you’re here and you’ve switched windows. You can stop it in my menu.',
       yes: 'Yes, look', no: 'No thanks',
       declined: 'Okay, I won’t look.',
       on: 'Okay. I’ll take a look now and then.',
-      noVision: '{model} can’t read pictures. gemma3 can, on your PC, and so can Gemini online: switch in my menu › AI model.',
+      noVision: '{model} can’t read pictures. gemma3 can, on your Mac, and so can Gemini online: switch in my menu › AI model.',
       noAI: 'I need an AI to look: right-click me › AI model.',
       failed: 'I couldn’t look: {error}',
     },
@@ -699,8 +703,16 @@ export const LINES = {
       sulk: ['Go talk to {rival} then.', 'I’m sulking. Can’t you tell?', 'Hmph.'],
       forgive: ['…Fine. Just this once.', 'Okay, I forgive you. A little.'],
     },
-    // Windows has its animations off: she barely moves, and says so once
-    motion: { line: 'Windows has its animations turned off, so I’m barely moving.', quote: 'Want me to move anyway? You can change it later in my menu › Animations.', full: 'Move!', still: 'Stay calm' },
+    // macOS has Reduce motion on: she barely moves, and says so once
+    motion: { line: 'macOS has Reduce motion on, so I’m barely moving.', quote: 'Want me to move anyway? You can change it later in my menu › Animations.', full: 'Move!', still: 'Stay calm' },
+    // what she says when macOS hasn't let her do something yet
+    permission: {
+      screen: 'macOS won’t let me see your screen yet.',
+      screenHow: 'Allow me in System Settings › Privacy & Security › Screen & System Audio Recording, then restart me.',
+      access: 'To press play, pause or next for you, macOS has to let me.',
+      accessHow: 'Allow me in System Settings › Privacy & Security › Accessibility. The volume already works.',
+      settings: 'Open Settings',
+    },
     status: 'Claude has been working on {project} for {time}.',
     last: 'Last action: {action}',
     sessions: '{count} active sessions',
@@ -710,7 +722,7 @@ export const LINES = {
     hooksFail: 'Couldn’t change the hooks: {error}',
     verbs: {
       Read: 'Reads', Write: 'Writes', Edit: 'Edits', MultiEdit: 'Edits', NotebookEdit: 'Edits',
-      Bash: 'Runs', PowerShell: 'Runs', Grep: 'Greps', Glob: 'Scans', WebFetch: 'Fetches',
+      Bash: 'Runs', Grep: 'Greps', Glob: 'Scans', WebFetch: 'Fetches',
       WebSearch: 'Searches', Agent: 'Delegates', Task: 'Delegates', TodoWrite: 'Plans', Skill: 'Loads',
       AskUserQuestion: 'Asks', ExitPlanMode: 'Proposes', default: 'Uses',
     },
@@ -771,7 +783,7 @@ export const LINES = {
       note: 'Respuestas generadas por una IA local. No es la Capri real.',
       noteCloud: 'Respuestas generadas por una IA en línea. No es la Capri real.',
       offline: 'No consigo contactar con Ollama.',
-      offlineHow: 'Para hablar conmigo, instala Ollama (ollama.com) y ábrelo; luego, en una terminal: ollama pull llama3.2\nTodo se queda en tu PC.',
+      offlineHow: 'Para hablar conmigo, instala Ollama (ollama.com) y ábrelo; luego, en una terminal: ollama pull llama3.2\nTodo se queda en tu Mac.',
       noModel: 'Ollama aún no tiene ningún modelo.',
       noModelHow: 'En una terminal: ollama pull llama3.2 (unos 2 GB). Luego vuelve a hablarme.',
       getOllama: 'Descargar Ollama', ok: 'Entendido',
@@ -784,21 +796,21 @@ export const LINES = {
       // cerrar una app que le pides cerrar, tras tu clic
       closeIt: 'Cerrar {app}', no: 'No',
       closed: '{app}: flatline. Hecho.',
-      stillOpen: '{app} sigue abierta: se esconde en la bandeja, o te pide guardar algo.',
+      stillOpen: '{app} sigue abierta: seguramente te pide guardar algo.',
       force: 'Forzar cierre', leave: 'Dejarla',
       forced: '{app}: cortada en seco.',
       unkillable: '{app} se resiste. Ciérrala tú desde el Administrador de tareas.',
-      notFound: 'No veo «{app}» abierta en tu PC.',
+      notFound: 'No veo «{app}» abierta en tu Mac.',
       // abrir una app o un juego, la música, una web
-      openIt: 'Abrir {app}', opened: '{app}: en marcha.', notInstalled: 'No encuentro «{app}» en tu PC.',
+      openIt: 'Abrir {app}', opened: '{app}: en marcha.', notInstalled: 'No encuentro «{app}» en tu Mac.',
       music: 'Busco «{song}» en Spotify.', siteIt: 'Abrir {site}', siteOpened: '{site}: abierta.',
       youtube: 'Ahí va: {title}.', youtubeSearch: 'Te busco «{song}» en YouTube.',
       web: 'Busco «{query}» en Google.',
       robloxPlay: 'Te lanzo {game} en Roblox.', robloxPage: '{game}: te abro su página de Roblox.', robloxNone: 'No encuentro «{game}» en Roblox.',
-      filesFound: 'Encontré {count} archivos: {list}.', fileFound: 'Encontrado: {list}.', filesNone: 'Nada para «{query}» en tu PC.',
-      showFolder: 'Ver la carpeta', shot: 'Captura hecha: {name} (en Imágenes › Screenshots).',
+      filesFound: 'Encontré {count} archivos: {list}.', fileFound: 'Encontrado: {list}.', filesNone: 'Nada para «{query}» en tu Mac.',
+      showFolder: 'Ver la carpeta', shot: 'Captura hecha: {name} ({where}).',
       folderOpened: 'Aquí está su carpeta: {name}.',
-      folders: { explorer: 'El explorador', recycle: 'La papelera', downloads: 'Tus descargas', desktop: 'Tu escritorio', documents: 'Tus documentos', pictures: 'Tus imágenes', music: 'Tu música', videos: 'Tus vídeos' },
+      folders: { finder: 'El Finder', trash: 'La papelera', downloads: 'Tus descargas', desktop: 'Tu escritorio', documents: 'Tus documentos', pictures: 'Tus imágenes', music: 'Tu música', videos: 'Tus vídeos' },
       media: { pausedAlready: 'Ya está en pausa.', playingAlready: 'Ya está sonando.', pause: 'Pausa.', play: 'Sigue sonando.', next: 'Siguiente.', previous: 'Anterior.', volup: 'Más alto.', voldown: 'Más bajo.', mute: 'Le di a silenciar.' },
     },
     // su informe: lo que Claude sacó hoy (su menú, o ella sola por la tarde)
@@ -831,7 +843,7 @@ export const LINES = {
       zap: '¿Yo, una peste?',
       possess: 'Esta ventana ahora es mía.',
       sleep: 'Una siestecita…',
-      chip: 'Ctrl+Alt+C y me guardo aquí.',
+      chip: '⌃⌥C y me guardo aquí.',
       end: 'Fin de la demo. Te toca, choom.',
     },
     guide: {
@@ -841,9 +853,9 @@ export const LINES = {
       menu: { line: '¿Qué te enseño?', quote: 'Elige y te llevo.' },
       topics: { connect: 'Conectarme a Claude', icon: '¿Dónde está mi icono?', claude: '¿Dónde está Claude?', folder: 'La carpeta de Claude', talk: 'Hablar conmigo', custom: 'Personalizarme', close: 'Nada, gracias' },
       icon: {
-        line: 'Mi icono está ahí, junto al reloj.',
+        line: 'Mi icono está ahí arriba, en la barra de menús.',
         quote: 'Haz clic: mi menú. Clic derecho sobre mí, el mismo.',
-        hidden: 'Windows suele esconderlo detrás del ^ junto al reloj: haz clic ahí, estoy dentro. Si no, clic derecho sobre mí: es el mismo menú.',
+        hidden: 'Cuando la barra de menús está llena (o hay muesca), macOS lo esconde. Clic derecho sobre mí: es el mismo menú.',
       },
       claude: {
         there: 'Claude es esa ventana de ahí.',
@@ -859,28 +871,26 @@ export const LINES = {
         empty: 'Todavía no hay settings.json: aparecerá cuando me conectes.',
         hook: 'No hace falta tocarlo a mano.',
         hookHow: 'Para desconectarme: clic derecho sobre mí › «Quitar los hooks de Claude Code». Los archivos .capri-backup son copias hechas antes de que lo tocara.',
-        missing: 'No hay carpeta de Claude en este PC.',
+        missing: 'No hay carpeta de Claude en este Mac.',
         missingHow: 'Aparece cuando Claude Code está instalado y se ha abierto una vez. Después podré conectarme.',
       },
     },
     // ponerla en marcha con botones (setup.js): Ollama, un modelo, una clave
     setup: {
       who: 'Para hablar contigo, necesito una IA.',
-      why: { noOllama: 'Ollama no está instalado en este PC.', asleep: 'Ollama está instalado, pero dormido.', noModel: 'Ollama aún no tiene ningún modelo.' },
-      whoHow: 'Lo más fácil: en tu PC, con Ollama. Es gratis y nada sale de tu equipo.\nSi no: en línea sin cuenta, o con la clave de un servicio.',
-      local: 'En mi PC', online: 'En línea, sin cuenta', key: 'Tengo una clave', later: 'Más tarde', back: 'Volver', other: 'Otra IA', ok: 'Entendido', talk: 'Hablar',
+      why: { noOllama: 'Ollama no está instalado en este Mac.', asleep: 'Ollama está instalado, pero dormido.', noModel: 'Ollama aún no tiene ningún modelo.' },
+      whoHow: 'Lo más fácil: en tu Mac, con Ollama. Es gratis y nada sale de tu equipo.\nSi no: en línea sin cuenta, o con la clave de un servicio.',
+      local: 'En mi Mac', online: 'En línea, sin cuenta', key: 'Tengo una clave', later: 'Más tarde', back: 'Volver', other: 'Otra IA', ok: 'Entendido', talk: 'Hablar',
       install: '¿Instalo Ollama?',
-      installHow: 'Es lo que hace funcionar la IA en tu PC. Cerca de 1 GB, uno o dos minutos. Windows puede pedirte que confirmes.',
+      installHow: 'Es lo que hace funcionar la IA en tu Mac. Uno o dos minutos, y va a tus Aplicaciones.',
       installBtn: 'Instalar', site: 'Web de Ollama',
-      noWinget: 'No puedo instalarlo yo misma en este PC.',
-      noWingetHow: 'Descarga Ollama desde su web e instálalo, luego vuelve a hablarme: yo hago el resto.',
       installing: 'Instalando Ollama…', installingHow: 'Tarda uno o dos minutos. No cierres nada.',
       installFailed: 'La instalación no funcionó.',
       waking: 'Despertando a Ollama…', wakingHow: 'Tarda unos segundos.',
-      wakeFailed: 'Ollama no se despierta.', wakeFailedHow: 'Ábrelo desde el menú Inicio y vuelve a hablarme.',
+      wakeFailed: 'Ollama no se despierta.', wakeFailedHow: 'Ábrelo desde tus Aplicaciones y vuelve a hablarme.',
       model: 'Necesito un modelo. Mi cerebro, más o menos.',
       bigger: 'Uno más grande, entonces. ¿Cuál?',
-      modelHow: 'gemma3 va mejor en idiomas distintos del inglés. llama3.2 es más ligero, para PCs pequeños.',
+      modelHow: 'gemma3 va mejor en idiomas distintos del inglés. llama3.2 es más ligero, para Macs pequeños.',
       cloudFree: 'gratis, en línea',
       cloudHow: 'Los que dicen «en línea» funcionan en Ollama, con tu cuenta: nada que descargar, pero tus mensajes pasan por sus servidores.',
       pulling: 'Descargando {model}…', pullStart: 'Empezando…',
@@ -889,7 +899,7 @@ export const LINES = {
       which: '¿Qué servicio?',
       whichHow: 'Groq y Gemini tienen una opción gratis: una cuenta, una clave, y listo.',
       paste: 'Pega aquí tu clave de {name}.',
-      pasteHow: 'La guardo en este PC, cifrada con tu cuenta de Windows.',
+      pasteHow: 'La guardo en este Mac, en tu llavero.',
       placeholder: 'Tu clave API…', save: 'Guardar', where: '¿Dónde la consigo?',
       keyTag: 'CLAVE', keyNote: 'Solo se envía a ese servicio, nunca a otro sitio.',
       keyBad: 'Con esa clave no funciona:',
@@ -903,7 +913,7 @@ export const LINES = {
       gb: 'GB', mb: 'MB',
       free: 'Gratis con Ollama',
       freeLine: '{name} gratis, con Ollama.',
-      freeHow: 'Abro una ventana donde Ollama inicia {name}. Elige ahí un modelo: los marcados «cloud» van más rápido en un PC pequeño (necesitan una cuenta de Ollama). En cuanto trabaje, te enseño lo que hace.',
+      freeHow: 'Abro una ventana donde Ollama inicia {name}. Elige ahí un modelo: los marcados «cloud» van más rápido en un Mac pequeño (necesitan una cuenta de Ollama). En cuanto trabaje, te enseño lo que hace.',
       freeBtn: 'Abrir la ventana',
       freeOpened: 'Ventana abierta.',
       freeOpenedHow: 'Elige un modelo en ella. En cuanto {name} haga algo, te aviso.',
@@ -935,16 +945,16 @@ export const LINES = {
     welcome: {
       hi: 'Hola, soy Capri.',
       alone: 'Aquí no hay Claude Code ni trabajo: me quedo en tu escritorio contigo.',
-      about: 'Vivo en tu escritorio y reacciono a lo que hace Claude Code en este PC. Sin él, simplemente ando por aquí, y también está bien.',
+      about: 'Vivo en tu escritorio y reacciono a lo que hace Claude Code en este Mac. Sin él, simplemente ando por aquí, y también está bien.',
       connect: '¿Quieres que me conecte a Claude Code? Un clic, y luego cierra Claude Code por completo y vuelve a abrirlo.',
-      noClaude: 'No encuentro Claude Code en este PC (necesita una suscripción de Claude). Sin él, me quedo aquí viviendo mi vida.',
-      menu: 'Clic derecho sobre mí para abrir mi menú. Ctrl+Alt+C me guarda.',
+      noClaude: 'No encuentro Claude Code en este Mac (necesita una suscripción de Claude). Sin él, me quedo aquí viviendo mi vida.',
+      menu: 'Clic derecho sobre mí para abrir mi menú. ⌃⌥C me guarda.',
       connectBtn: 'Conectarme', later: 'Más tarde', whatClaude: '¿Qué es Claude Code?', justHang: 'Solo pasear', ok: 'Entendido',
       connected: '¡Conectada!',
       restart: 'Ahora cierra Claude Code por completo y vuelve a abrirlo (una sesión nueva). En cuanto haga algo, te aviso.',
       linked: '¡Veo a Claude! Estamos conectados.',
       ready: 'Estoy conectada a Claude Code.',
-      readyHow: 'Cuando trabaje, te enseño lo que hace. Clic derecho sobre mí para mi menú. Ctrl+Alt+C me guarda.',
+      readyHow: 'Cuando trabaje, te enseño lo que hace. Clic derecho sobre mí para mi menú. ⌃⌥C me guarda.',
       afterInstall: 'Cuando lo tengas, clic derecho sobre mí › «Instalar los hooks de Claude Code».',
       failed: 'No pude conectarme: {error}',
     },
@@ -962,7 +972,7 @@ export const LINES = {
     },
     // en tu otra pantalla, siguiéndote
     screens: { hello: ['Hola, otra pantalla.', '¿Ahora trabajas aquí? Voy.', 'Aquí estás.'] },
-    // reacciona a tu PC (pc.js): procesador, batería, red, USB, juego
+    // reacciona a tu Mac (pc.js): procesador, batería, red, USB, juego
     pc: {
       hot: ['Tu procesador va a tope. Yo también me caliento.', '{cpu} % de CPU. Aquí dentro hace calor.', '¡Esto se calienta! ¿Qué estás ejecutando?'],
       cool: ['Uf. Ya baja.'],
@@ -994,13 +1004,13 @@ export const LINES = {
     // mira tu pantalla (look.js): lo que te dice antes, y cuando no funciona
     look: {
       ask: '¿Puedo echarle un ojo a tu pantalla?',
-      local: 'Una imagen de tu pantalla va a tu IA, en este PC ({model}), y te digo qué me parece. Nada sale de tu equipo, y no me quedo con la imagen.',
+      local: 'Una imagen de tu pantalla va a tu IA, en este Mac ({model}), y te digo qué me parece. Nada sale de tu equipo, y no me quedo con la imagen.',
       online: 'Una imagen de tu pantalla va a {service} ({model}) para que pueda comentarla. Yo no me la quedo, pero ellos la reciben: evítalo cuando tengas cosas personales en pantalla.',
       auto: 'De vez en cuando, cuando estés aquí y hayas cambiado de ventana. Puedes pararlo en mi menú.',
       yes: 'Sí, mira', no: 'No, gracias',
       declined: 'Vale, no miro.',
       on: 'Vale. Echaré un ojo de vez en cuando.',
-      noVision: '{model} no sabe leer imágenes. gemma3 sí, en tu PC, y Gemini en línea también: cámbialo en mi menú › Modelo de IA.',
+      noVision: '{model} no sabe leer imágenes. gemma3 sí, en tu Mac, y Gemini en línea también: cámbialo en mi menú › Modelo de IA.',
       noAI: 'Necesito una IA para mirar: clic derecho sobre mí › Modelo de IA.',
       failed: 'No pude mirar: {error}',
     },
@@ -1045,8 +1055,16 @@ export const LINES = {
       sulk: ['Pues ve a hablar con {rival}.', 'Estoy enfadada. ¿No se nota?', 'Hmm.'],
       forgive: ['…Vale. Solo por esta vez.', 'Está bien, te perdono. Un poco.'],
     },
-    // Windows tiene las animaciones desactivadas: apenas se mueve, y lo dice una vez
-    motion: { line: 'Windows tiene las animaciones desactivadas, así que apenas me muevo.', quote: '¿Quieres que me mueva igual? Puedes cambiarlo en mi menú › Animaciones.', full: '¡Muévete!', still: 'Quédate tranquila' },
+    // macOS tiene «Reducir movimiento» activado: apenas se mueve, y lo dice una vez
+    motion: { line: 'macOS tiene «Reducir movimiento» activado, así que apenas me muevo.', quote: '¿Quieres que me mueva igual? Puedes cambiarlo en mi menú › Animaciones.', full: '¡Muévete!', still: 'Quédate tranquila' },
+    // what she says when macOS hasn't let her do something yet
+    permission: {
+      screen: 'macOS todavía no me deja ver tu pantalla.',
+      screenHow: 'Dame permiso en Ajustes del Sistema › Privacidad y seguridad › Grabación de pantalla y audio del sistema, y luego reiníciame.',
+      access: 'Para pulsar reproducir, pausa o siguiente, macOS tiene que dejarme.',
+      accessHow: 'Dame permiso en Ajustes del Sistema › Privacidad y seguridad › Accesibilidad. El volumen ya funciona.',
+      settings: 'Abrir Ajustes',
+    },
     status: 'Claude lleva {time} trabajando en {project}.',
     last: 'Última acción: {action}',
     sessions: '{count} sesiones activas',
@@ -1056,7 +1074,7 @@ export const LINES = {
     hooksFail: 'No pude tocar los hooks: {error}',
     verbs: {
       Read: 'Lee', Write: 'Escribe', Edit: 'Edita', MultiEdit: 'Edita', NotebookEdit: 'Edita',
-      Bash: 'Ejecuta', PowerShell: 'Ejecuta', Grep: 'Busca', Glob: 'Explora', WebFetch: 'Consulta',
+      Bash: 'Ejecuta', Grep: 'Busca', Glob: 'Explora', WebFetch: 'Consulta',
       WebSearch: 'Busca', Agent: 'Delega', Task: 'Delega', TodoWrite: 'Planifica', Skill: 'Carga',
       AskUserQuestion: 'Pregunta', ExitPlanMode: 'Propone', default: 'Usa',
     },
@@ -1119,7 +1137,7 @@ export const LINES = {
       note: 'Respostas geradas por uma IA local. Não é a Capri de verdade.',
       noteCloud: 'Respostas geradas por uma IA online. Não é a Capri de verdade.',
       offline: 'Não consigo falar com o Ollama.',
-      offlineHow: 'Para falar comigo, instale o Ollama (ollama.com) e abra-o; depois, num terminal: ollama pull llama3.2\nTudo fica no seu PC.',
+      offlineHow: 'Para falar comigo, instale o Ollama (ollama.com) e abra-o; depois, num terminal: ollama pull llama3.2\nTudo fica no seu Mac.',
       noModel: 'O Ollama ainda não tem nenhum modelo.',
       noModelHow: 'Num terminal: ollama pull llama3.2 (cerca de 2 GB). Depois fala comigo de novo.',
       getOllama: 'Baixar Ollama', ok: 'Entendi',
@@ -1132,21 +1150,21 @@ export const LINES = {
       // fechar um app que você pede para fechar, depois do seu clique
       closeIt: 'Fechar {app}', no: 'Não',
       closed: '{app}: flatline. Feito.',
-      stillOpen: '{app} continua rodando: ele se esconde na bandeja, ou está pedindo para você salvar algo.',
+      stillOpen: '{app} continua rodando: provavelmente está pedindo para você salvar algo.',
       force: 'Forçar fechamento', leave: 'Deixar',
       forced: '{app}: cortado na hora.',
       unkillable: '{app} não cai. Feche você mesmo pelo Gerenciador de Tarefas.',
-      notFound: 'Não vejo “{app}” aberto no seu PC.',
+      notFound: 'Não vejo “{app}” aberto no seu Mac.',
       // abrir um app ou um jogo, a música, um site
-      openIt: 'Abrir {app}', opened: '{app}: abrindo.', notInstalled: 'Não acho “{app}” no seu PC.',
+      openIt: 'Abrir {app}', opened: '{app}: abrindo.', notInstalled: 'Não acho “{app}” no seu Mac.',
       music: 'Procurando “{song}” no Spotify.', siteIt: 'Abrir {site}', siteOpened: '{site}: aberto.',
       youtube: 'Lá vai: {title}.', youtubeSearch: 'Vou procurar “{song}” no YouTube.',
       web: 'Procurando “{query}” no Google.',
       robloxPlay: 'Tô abrindo {game} no Roblox.', robloxPage: '{game}: abrindo a página no Roblox.', robloxNone: 'Não achei “{game}” no Roblox.',
-      filesFound: 'Achei {count} arquivos: {list}.', fileFound: 'Achei: {list}.', filesNone: 'Nada pra “{query}” no seu PC.',
-      showFolder: 'Ver a pasta', shot: 'Captura feita: {name} (em Imagens › Screenshots).',
+      filesFound: 'Achei {count} arquivos: {list}.', fileFound: 'Achei: {list}.', filesNone: 'Nada pra “{query}” no seu Mac.',
+      showFolder: 'Ver a pasta', shot: 'Captura feita: {name} ({where}).',
       folderOpened: 'Aqui tá a pasta: {name}.',
-      folders: { explorer: 'O explorador de arquivos', recycle: 'A lixeira', downloads: 'Seus downloads', desktop: 'Sua área de trabalho', documents: 'Seus documentos', pictures: 'Suas imagens', music: 'Suas músicas', videos: 'Seus vídeos' },
+      folders: { finder: 'O Finder', trash: 'O Lixo', downloads: 'Seus downloads', desktop: 'Sua área de trabalho', documents: 'Seus documentos', pictures: 'Suas imagens', music: 'Suas músicas', videos: 'Seus vídeos' },
       media: { pausedAlready: 'Já está pausado.', playingAlready: 'Já está tocando.', pause: 'Pausado.', play: 'Tocando.', next: 'Próxima.', previous: 'Anterior.', volup: 'Mais alto.', voldown: 'Mais baixo.', mute: 'Apertei o mudo.' },
     },
     // o relatório dela: o que o Claude fez hoje (o menu dela, ou sozinha à noite)
@@ -1179,7 +1197,7 @@ export const LINES = {
       zap: 'Eu, uma peste?',
       possess: 'Essa janela agora é minha.',
       sleep: 'Um cochilo…',
-      chip: 'Ctrl+Alt+C e eu me guardo aqui.',
+      chip: '⌃⌥C e eu me guardo aqui.',
       end: 'Fim da demo. Sua vez, choom.',
     },
     guide: {
@@ -1189,9 +1207,9 @@ export const LINES = {
       menu: { line: 'O que eu te mostro?', quote: 'Escolhe que eu te levo.' },
       topics: { connect: 'Me conectar ao Claude', icon: 'Cadê meu ícone?', claude: 'Cadê o Claude?', folder: 'A pasta do Claude', talk: 'Falar comigo', custom: 'Me personalizar', close: 'Nada, valeu' },
       icon: {
-        line: 'Meu ícone está ali, perto do relógio.',
+        line: 'Meu ícone está lá em cima, na barra de menus.',
         quote: 'Clica nele: meu menu. Clique direito em mim dá no mesmo.',
-        hidden: 'O Windows costuma escondê-lo atrás do ^ perto do relógio: clica ali, eu estou dentro. Ou clique direito em mim: é o mesmo menu.',
+        hidden: 'Quando a barra de menus está cheia (ou tem o notch), o macOS esconde ele. Clique direito em mim: é o mesmo menu.',
       },
       claude: {
         there: 'O Claude é aquela janela ali.',
@@ -1207,28 +1225,26 @@ export const LINES = {
         empty: 'Ainda não tem settings.json: ele aparece quando você me conectar.',
         hook: 'Não precisa mexer nele na mão.',
         hookHow: 'Para me desconectar: clique direito em mim › “Remover os hooks do Claude Code”. Os arquivos .capri-backup são cópias feitas antes de eu mexer nele.',
-        missing: 'Não tem pasta do Claude neste PC.',
+        missing: 'Não tem pasta do Claude neste Mac.',
         missingHow: 'Ela aparece quando o Claude Code está instalado e já foi aberto uma vez. Aí eu consigo me conectar.',
       },
     },
     // deixar ela pronta com botões (setup.js): Ollama, um modelo, uma chave
     setup: {
       who: 'Pra falar com você, eu preciso de uma IA.',
-      why: { noOllama: 'O Ollama não está instalado neste PC.', asleep: 'O Ollama está instalado, mas dormindo.', noModel: 'O Ollama ainda não tem nenhum modelo.' },
-      whoHow: 'O mais fácil: no seu PC, com o Ollama. É grátis e nada sai da sua máquina.\nSe não: online sem conta, ou com a chave de um serviço.',
-      local: 'No meu PC', online: 'Online, sem conta', key: 'Tenho uma chave', later: 'Depois', back: 'Voltar', other: 'Outra IA', ok: 'Entendi', talk: 'Conversar',
+      why: { noOllama: 'O Ollama não está instalado neste Mac.', asleep: 'O Ollama está instalado, mas dormindo.', noModel: 'O Ollama ainda não tem nenhum modelo.' },
+      whoHow: 'O mais fácil: no seu Mac, com o Ollama. É grátis e nada sai da sua máquina.\nSe não: online sem conta, ou com a chave de um serviço.',
+      local: 'No meu Mac', online: 'Online, sem conta', key: 'Tenho uma chave', later: 'Depois', back: 'Voltar', other: 'Outra IA', ok: 'Entendi', talk: 'Conversar',
       install: 'Instalo o Ollama?',
-      installHow: 'É ele que roda a IA no seu PC. Cerca de 1 GB, um ou dois minutos. O Windows pode pedir pra você confirmar.',
+      installHow: 'É ele que roda a IA no seu Mac. Um ou dois minutos, e ele vai para os seus Aplicativos.',
       installBtn: 'Instalar', site: 'Site do Ollama',
-      noWinget: 'Não consigo instalar sozinha neste PC.',
-      noWingetHow: 'Baixe o Ollama no site dele e instale, depois fale comigo de novo: eu faço o resto.',
       installing: 'Instalando o Ollama…', installingHow: 'Leva um ou dois minutos. Não feche nada.',
       installFailed: 'A instalação não deu certo.',
       waking: 'Acordando o Ollama…', wakingHow: 'Leva alguns segundos.',
-      wakeFailed: 'O Ollama não acorda.', wakeFailedHow: 'Abra ele pelo menu Iniciar e fale comigo de novo.',
+      wakeFailed: 'O Ollama não acorda.', wakeFailedHow: 'Abra ele pelos seus Aplicativos e fale comigo de novo.',
       model: 'Eu preciso de um modelo. Meu cérebro, mais ou menos.',
       bigger: 'Um maior, então. Qual?',
-      modelHow: 'O gemma3 vai melhor em idiomas que não são o inglês. O llama3.2 é mais leve, pra PCs mais fracos.',
+      modelHow: 'O gemma3 vai melhor em idiomas que não são o inglês. O llama3.2 é mais leve, pra Macs mais fracos.',
       cloudFree: 'grátis, online',
       cloudHow: 'Os marcados “online” rodam no Ollama, com a sua conta: nada pra baixar, mas suas mensagens passam pelos servidores deles.',
       pulling: 'Baixando {model}…', pullStart: 'Começando…',
@@ -1237,7 +1253,7 @@ export const LINES = {
       which: 'Qual serviço?',
       whichHow: 'O Groq e o Gemini têm um plano grátis: uma conta, uma chave, e pronto.',
       paste: 'Cole aqui sua chave do {name}.',
-      pasteHow: 'Eu guardo ela neste PC, criptografada com a sua conta do Windows.',
+      pasteHow: 'Eu guardo ela neste Mac, nas suas Chaves.',
       placeholder: 'Sua chave de API…', save: 'Salvar', where: 'Onde eu consigo?',
       keyTag: 'CHAVE', keyNote: 'Ela só vai pra esse serviço, nunca pra outro lugar.',
       keyBad: 'Com essa chave não funciona:',
@@ -1251,7 +1267,7 @@ export const LINES = {
       gb: 'GB', mb: 'MB',
       free: 'Grátis com o Ollama',
       freeLine: '{name} grátis, com o Ollama.',
-      freeHow: 'Eu abro uma janela onde o Ollama inicia o {name}. Escolha um modelo lá: os marcados “cloud” são mais rápidos num PC fraco (precisam de uma conta do Ollama). Assim que ele trabalhar, eu te mostro o que ele está fazendo.',
+      freeHow: 'Eu abro uma janela onde o Ollama inicia o {name}. Escolha um modelo lá: os marcados “cloud” são mais rápidos num Mac fraco (precisam de uma conta do Ollama). Assim que ele trabalhar, eu te mostro o que ele está fazendo.',
       freeBtn: 'Abrir a janela',
       freeOpened: 'Janela aberta.',
       freeOpenedHow: 'Escolha um modelo nela. Assim que o {name} fizer algo, eu te aviso.',
@@ -1283,16 +1299,16 @@ export const LINES = {
     welcome: {
       hi: 'Oi, eu sou a Capri.',
       alone: 'Sem Claude Code aqui, sem trabalho: eu só fico no seu desktop com você.',
-      about: 'Eu moro na sua área de trabalho e reajo ao que o Claude Code faz neste PC. Sem ele, eu só fico por aqui de boa, e tudo bem também.',
+      about: 'Eu moro na sua área de trabalho e reajo ao que o Claude Code faz neste Mac. Sem ele, eu só fico por aqui de boa, e tudo bem também.',
       connect: 'Quer que eu me conecte ao Claude Code? Um clique, depois feche o Claude Code completamente e abra de novo.',
-      noClaude: 'Não encontrei o Claude Code neste PC (ele precisa de uma assinatura do Claude). Sem ele, eu fico só vivendo minha vida aqui.',
-      menu: 'Clique com o botão direito em mim para abrir meu menu. Ctrl+Alt+C me guarda.',
+      noClaude: 'Não encontrei o Claude Code neste Mac (ele precisa de uma assinatura do Claude). Sem ele, eu fico só vivendo minha vida aqui.',
+      menu: 'Clique com o botão direito em mim para abrir meu menu. ⌃⌥C me guarda.',
       connectBtn: 'Me conectar', later: 'Depois', whatClaude: 'O que é o Claude Code?', justHang: 'Só ficar de boa', ok: 'Entendi',
       connected: 'Conectada!',
       restart: 'Agora feche o Claude Code completamente e abra de novo (uma sessão nova). Assim que ele fizer algo, eu te aviso.',
       linked: 'Tô vendo o Claude! Estamos conectados.',
       ready: 'Tô conectada ao Claude Code.',
-      readyHow: 'Quando ele trabalhar, eu te mostro o que ele tá fazendo. Botão direito em mim para o menu. Ctrl+Alt+C me guarda.',
+      readyHow: 'Quando ele trabalhar, eu te mostro o que ele tá fazendo. Botão direito em mim para o menu. ⌃⌥C me guarda.',
       afterInstall: 'Quando tiver instalado, clique com o botão direito em mim › “Instalar os hooks do Claude Code”.',
       failed: 'Não consegui me conectar: {error}',
     },
@@ -1310,7 +1326,7 @@ export const LINES = {
     },
     // na sua outra tela, te seguindo
     screens: { hello: ['Oi, outra tela.', 'Trabalhando aqui agora? Tô indo.', 'Aí está você.'] },
-    // ela reage ao seu PC (pc.js): processador, bateria, rede, pendrive, jogo
+    // ela reage ao seu Mac (pc.js): processador, bateria, rede, pendrive, jogo
     pc: {
       hot: ['Seu processador tá no talo. Eu também tô esquentando.', '{cpu} % de CPU. Tá quente aqui dentro.', 'Tá esquentando! O que você tá rodando?'],
       cool: ['Ufa. Esfriando.'],
@@ -1342,13 +1358,13 @@ export const LINES = {
     // ela olha sua tela (look.js): o que ela te diz antes, e quando não dá certo
     look: {
       ask: 'Posso dar uma olhada na sua tela?',
-      local: 'Uma imagem da sua tela vai pra sua IA, neste PC ({model}), e eu te digo o que acho. Nada sai da sua máquina, e eu não guardo a imagem.',
+      local: 'Uma imagem da sua tela vai pra sua IA, neste Mac ({model}), e eu te digo o que acho. Nada sai da sua máquina, e eu não guardo a imagem.',
       online: 'Uma imagem da sua tela vai pro {service} ({model}) pra eu poder comentar. Eu não guardo, mas eles recebem: evita quando tiver coisa pessoal na tela.',
       auto: 'De vez em quando, quando você estiver aqui e tiver trocado de janela. Dá pra parar no meu menu.',
       yes: 'Sim, olha', no: 'Não, valeu',
       declined: 'Beleza, não vou olhar.',
       on: 'Beleza. Vou dar uma olhada de vez em quando.',
-      noVision: '{model} não sabe ler imagens. O gemma3 sabe, no seu PC, e o Gemini online também: troca no meu menu › Modelo de IA.',
+      noVision: '{model} não sabe ler imagens. O gemma3 sabe, no seu Mac, e o Gemini online também: troca no meu menu › Modelo de IA.',
       noAI: 'Preciso de uma IA pra olhar: clique direito em mim › Modelo de IA.',
       failed: 'Não consegui olhar: {error}',
     },
@@ -1393,8 +1409,16 @@ export const LINES = {
       sulk: ['Então vai falar com {rival}.', 'Tô de birra. Não dá pra ver?', 'Hmpf.'],
       forgive: ['…Tá bom. Só dessa vez.', 'Ok, te perdoo. Um pouco.'],
     },
-    // o Windows está com as animações desligadas: ela quase não se mexe, e avisa uma vez
-    motion: { line: 'O Windows está com as animações desligadas, então eu quase não me mexo.', quote: 'Quer que eu me mexa mesmo assim? Dá pra mudar depois no meu menu › Animações.', full: 'Se mexe!', still: 'Fica quieta' },
+    // o macOS está com “Reduzir movimento” ligado: ela quase não se mexe, e avisa uma vez
+    motion: { line: 'O macOS está com “Reduzir movimento” ligado, então eu quase não me mexo.', quote: 'Quer que eu me mexa mesmo assim? Dá pra mudar depois no meu menu › Animações.', full: 'Se mexe!', still: 'Fica quieta' },
+    // what she says when macOS hasn't let her do something yet
+    permission: {
+      screen: 'O macOS ainda não me deixa ver a sua tela.',
+      screenHow: 'Me autorize em Ajustes do Sistema › Privacidade e Segurança › Gravação de Tela e Áudio do Sistema, depois me reinicie.',
+      access: 'Para apertar play, pausa ou próxima, o macOS precisa deixar.',
+      accessHow: 'Me autorize em Ajustes do Sistema › Privacidade e Segurança › Acessibilidade. O volume já funciona.',
+      settings: 'Abrir Ajustes',
+    },
     status: 'O Claude tá trabalhando em {project} há {time}.',
     last: 'Última ação: {action}',
     sessions: '{count} sessões ativas',
@@ -1404,7 +1428,7 @@ export const LINES = {
     hooksFail: 'Não consegui mexer nos hooks: {error}',
     verbs: {
       Read: 'Lê', Write: 'Escreve', Edit: 'Edita', MultiEdit: 'Edita', NotebookEdit: 'Edita',
-      Bash: 'Roda', PowerShell: 'Roda', Grep: 'Procura', Glob: 'Vasculha', WebFetch: 'Consulta',
+      Bash: 'Roda', Grep: 'Procura', Glob: 'Vasculha', WebFetch: 'Consulta',
       WebSearch: 'Pesquisa', Agent: 'Delega', Task: 'Delega', TodoWrite: 'Planeja', Skill: 'Carrega',
       AskUserQuestion: 'Pergunta', ExitPlanMode: 'Propõe', default: 'Usa',
     },
@@ -1467,7 +1491,7 @@ export const LINES = {
       note: 'Ответы генерирует локальный ИИ. Это не настоящая Капри.',
       noteCloud: 'Ответы генерирует облачный ИИ. Это не настоящая Капри.',
       offline: 'Не могу достучаться до Ollama.',
-      offlineHow: 'Чтобы поговорить со мной, установи Ollama (ollama.com) и запусти её, потом в терминале: ollama pull llama3.2\nВсё остаётся на твоём ПК.',
+      offlineHow: 'Чтобы поговорить со мной, установи Ollama (ollama.com) и запусти её, потом в терминале: ollama pull llama3.2\nВсё остаётся на твоём Mac.',
       noModel: 'В Ollama пока нет ни одной модели.',
       noModelHow: 'В терминале: ollama pull llama3.2 (около 2 ГБ). Потом поговори со мной снова.',
       getOllama: 'Скачать Ollama', ok: 'Понятно',
@@ -1480,21 +1504,21 @@ export const LINES = {
       // закрыть приложение, которое ты просишь закрыть, после твоего клика
       closeIt: 'Закрыть {app}', no: 'Нет',
       closed: '{app}: флэтлайн. Готово.',
-      stillOpen: '{app} всё ещё работает: прячется в трее или просит что-то сохранить.',
+      stillOpen: '{app} всё ещё работает: наверное, просит что-то сохранить.',
       force: 'Закрыть принудительно', leave: 'Оставить',
       forced: '{app}: отрублено.',
       unkillable: '{app} не сдаётся. Закрой через Диспетчер задач.',
-      notFound: 'Не вижу «{app}» среди открытых на твоём ПК.',
+      notFound: 'Не вижу «{app}» среди открытых на твоём Mac.',
       // открыть приложение или игру, музыка, сайт
-      openIt: 'Открыть {app}', opened: '{app}: запускаю.', notInstalled: 'Не нахожу «{app}» на твоём ПК.',
+      openIt: 'Открыть {app}', opened: '{app}: запускаю.', notInstalled: 'Не нахожу «{app}» на твоём Mac.',
       music: 'Ищу «{song}» в Spotify.', siteIt: 'Открыть {site}', siteOpened: '{site}: открыт.',
       youtube: 'Держи: {title}.', youtubeSearch: 'Ищу «{song}» на YouTube.',
       web: 'Ищу «{query}» в Google.',
       robloxPlay: 'Запускаю {game} в Roblox.', robloxPage: '{game}: открываю страницу в Roblox.', robloxNone: 'Не нахожу «{game}» в Roblox.',
-      filesFound: 'Нашла файлов: {count}. {list}.', fileFound: 'Нашла: {list}.', filesNone: 'По запросу «{query}» на твоём ПК ничего.',
-      showFolder: 'Показать папку', shot: 'Скриншот готов: {name} (в Изображения › Screenshots).',
+      filesFound: 'Нашла файлов: {count}. {list}.', fileFound: 'Нашла: {list}.', filesNone: 'По запросу «{query}» на твоём Mac ничего.',
+      showFolder: 'Показать папку', shot: 'Скриншот готов: {name} ({where}).',
       folderOpened: 'Вот его папка: {name}.',
-      folders: { explorer: 'Проводник', recycle: 'Корзина', downloads: 'Твои загрузки', desktop: 'Твой рабочий стол', documents: 'Твои документы', pictures: 'Твои изображения', music: 'Твоя музыка', videos: 'Твои видео' },
+      folders: { finder: 'Finder', trash: 'Корзина', downloads: 'Твои загрузки', desktop: 'Твой рабочий стол', documents: 'Твои документы', pictures: 'Твои изображения', music: 'Твоя музыка', videos: 'Твои видео' },
       media: { pausedAlready: 'Уже на паузе.', playingAlready: 'Уже играет.', pause: 'Пауза.', play: 'Играет.', next: 'Следующий.', previous: 'Предыдущий.', volup: 'Громче.', voldown: 'Тише.', mute: 'Нажала «без звука».' },
     },
     // её отчёт: что Claude сделал за день (её меню, или сама вечером)
@@ -1529,7 +1553,7 @@ export const LINES = {
       zap: 'Я? Вредина?',
       possess: 'Теперь это окно моё.',
       sleep: 'Немного вздремну…',
-      chip: 'Ctrl+Alt+C — и я прячусь сюда.',
+      chip: '⌃⌥C — и я прячусь сюда.',
       end: 'Конец демо. Твой ход, чумба.',
     },
     guide: {
@@ -1539,9 +1563,9 @@ export const LINES = {
       menu: { line: 'Что тебе показать?', quote: 'Выбирай, я отведу.' },
       topics: { connect: 'Подключить меня к Claude', icon: 'Где моя иконка?', claude: 'Где Claude?', folder: 'Папка Claude', talk: 'Поговорить со мной', custom: 'Настроить меня', close: 'Ничего, спасибо' },
       icon: {
-        line: 'Моя иконка вон там, у часов.',
+        line: 'Мой значок — вон там, наверху, в строке меню.',
         quote: 'Нажми на неё — моё меню. Правый клик по мне — то же самое.',
-        hidden: 'Windows часто прячет её за ^ рядом с часами: нажми туда, я там. Или правый клик по мне — то же меню.',
+        hidden: 'Когда строка меню переполнена (или мешает вырез экрана), macOS его прячет. Правый клик по мне — то же меню.',
       },
       claude: {
         there: 'Claude — вот это окно.',
@@ -1557,28 +1581,26 @@ export const LINES = {
         empty: 'settings.json ещё нет: он появится, когда ты меня подключишь.',
         hook: 'Руками там ничего трогать не нужно.',
         hookHow: 'Чтобы отключить меня: правый клик по мне › «Удалить хуки Claude Code». Файлы .capri-backup — копии, сделанные до того, как я его изменила.',
-        missing: 'На этом ПК нет папки Claude.',
+        missing: 'На этом Mac нет папки Claude.',
         missingHow: 'Она появляется, когда Claude Code установлен и запущен хотя бы раз. Тогда я смогу подключиться.',
       },
     },
     // запустить её кнопками (setup.js): Ollama, модель, ключ
     setup: {
       who: 'Чтобы говорить с тобой, мне нужен ИИ.',
-      why: { noOllama: 'Ollama не установлена на этом ПК.', asleep: 'Ollama установлена, но спит.', noModel: 'В Ollama пока нет ни одной модели.' },
-      whoHow: 'Проще всего: у тебя на ПК, через Ollama. Бесплатно, и ничего не уходит наружу.\nИли онлайн без аккаунта, или с ключом какого-нибудь сервиса.',
-      local: 'На моём ПК', online: 'Онлайн, без аккаунта', key: 'У меня есть ключ', later: 'Позже', back: 'Назад', other: 'Другой ИИ', ok: 'Понятно', talk: 'Поговорить',
+      why: { noOllama: 'Ollama не установлена на этом Mac.', asleep: 'Ollama установлена, но спит.', noModel: 'В Ollama пока нет ни одной модели.' },
+      whoHow: 'Проще всего: у тебя на Mac, через Ollama. Бесплатно, и ничего не уходит наружу.\nИли онлайн без аккаунта, или с ключом какого-нибудь сервиса.',
+      local: 'На моём Mac', online: 'Онлайн, без аккаунта', key: 'У меня есть ключ', later: 'Позже', back: 'Назад', other: 'Другой ИИ', ok: 'Понятно', talk: 'Поговорить',
       install: 'Установить Ollama?',
-      installHow: 'Это она запускает ИИ у тебя на ПК. Около 1 ГБ, минута-две. Windows может попросить подтвердить.',
+      installHow: 'Это она запускает ИИ у тебя на Mac. Минута-две, и она будет в «Программах».',
       installBtn: 'Установить', site: 'Сайт Ollama',
-      noWinget: 'Сама я не могу её здесь установить.',
-      noWingetHow: 'Скачай Ollama с её сайта и установи, потом снова заговори со мной: остальное сделаю я.',
       installing: 'Устанавливаю Ollama…', installingHow: 'Это минута-две. Ничего не закрывай.',
       installFailed: 'Установка не удалась.',
       waking: 'Бужу Ollama…', wakingHow: 'Это займёт пару секунд.',
-      wakeFailed: 'Ollama не просыпается.', wakeFailedHow: 'Открой её из меню «Пуск» и снова заговори со мной.',
+      wakeFailed: 'Ollama не просыпается.', wakeFailedHow: 'Открой её из «Программ» и снова заговори со мной.',
       model: 'Мне нужна модель. Мой мозг, грубо говоря.',
       bigger: 'Тогда побольше. Какую?',
-      modelHow: 'gemma3 лучше говорит не по-английски. llama3.2 легче, для слабых ПК.',
+      modelHow: 'gemma3 лучше говорит не по-английски. llama3.2 легче, для слабых Mac.',
       cloudFree: 'бесплатно, онлайн',
       cloudHow: 'Те, что «онлайн», работают у Ollama, с твоим аккаунтом: ничего не нужно скачивать, но твои сообщения идут через их серверы.',
       pulling: 'Скачиваю {model}…', pullStart: 'Начинаю…',
@@ -1587,7 +1609,7 @@ export const LINES = {
       which: 'Какой сервис?',
       whichHow: 'У Groq и Gemini есть бесплатный тариф: аккаунт, ключ, и готово.',
       paste: 'Вставь сюда ключ {name}.',
-      pasteHow: 'Я храню его на этом ПК, зашифрованным твоей учётной записью Windows.',
+      pasteHow: 'Я храню его на этом Mac, в твоей связке ключей.',
       placeholder: 'Твой API-ключ…', save: 'Сохранить', where: 'Где его взять?',
       keyTag: 'КЛЮЧ', keyNote: 'Он уходит только этому сервису и больше никуда.',
       keyBad: 'С этим ключом не работает:',
@@ -1601,7 +1623,7 @@ export const LINES = {
       gb: 'ГБ', mb: 'МБ',
       free: 'Бесплатно через Ollama',
       freeLine: '{name} бесплатно, через Ollama.',
-      freeHow: 'Я открою окно, где Ollama запустит {name}. Выбери там модель: те, что с пометкой «cloud», быстрее на слабом ПК (нужен аккаунт Ollama). Как только он начнёт работать, я покажу тебе, что он делает.',
+      freeHow: 'Я открою окно, где Ollama запустит {name}. Выбери там модель: те, что с пометкой «cloud», быстрее на слабом Mac (нужен аккаунт Ollama). Как только он начнёт работать, я покажу тебе, что он делает.',
       freeBtn: 'Открыть окно',
       freeOpened: 'Окно открыто.',
       freeOpenedHow: 'Выбери в нём модель. Как только {name} что-то сделает, я скажу.',
@@ -1633,16 +1655,16 @@ export const LINES = {
     welcome: {
       hi: 'Привет, я Капри.',
       alone: 'Здесь нет Claude Code и работы: я просто побуду у тебя на рабочем столе.',
-      about: 'Я живу на твоём рабочем столе и реагирую на то, что делает Claude Code на этом ПК. Без него я просто тусуюсь рядом, и это тоже нормально.',
+      about: 'Я живу на твоём рабочем столе и реагирую на то, что делает Claude Code на этом Mac. Без него я просто тусуюсь рядом, и это тоже нормально.',
       connect: 'Подключиться к Claude Code? Один клик, потом полностью закрой Claude Code и открой снова.',
-      noClaude: 'Я не нахожу Claude Code на этом ПК (для него нужна подписка Claude). Без него я просто живу здесь своей жизнью.',
-      menu: 'Правый клик по мне — моё меню. Ctrl+Alt+C — спрятать меня.',
+      noClaude: 'Я не нахожу Claude Code на этом Mac (для него нужна подписка Claude). Без него я просто живу здесь своей жизнью.',
+      menu: 'Правый клик по мне — моё меню. ⌃⌥C — спрятать меня.',
       connectBtn: 'Подключить', later: 'Позже', whatClaude: 'Что такое Claude Code?', justHang: 'Просто тусоваться', ok: 'Понятно',
       connected: 'Подключено!',
       restart: 'Теперь полностью закрой Claude Code и открой снова (новая сессия). Как только он что-то сделает, я скажу.',
       linked: 'Я вижу Claude! Мы на связи.',
       ready: 'Я подключена к Claude Code.',
-      readyHow: 'Когда он работает, я показываю, что он делает. Правый клик по мне — моё меню. Ctrl+Alt+C — спрятать меня.',
+      readyHow: 'Когда он работает, я показываю, что он делает. Правый клик по мне — моё меню. ⌃⌥C — спрятать меня.',
       afterInstall: 'Когда установишь, сделай правый клик по мне › «Установить хуки Claude Code».',
       failed: 'Не удалось подключиться: {error}',
     },
@@ -1660,7 +1682,7 @@ export const LINES = {
     },
     // на твоём другом экране, следом за тобой
     screens: { hello: ['Привет, другой экран.', 'Теперь работаешь тут? Иду.', 'Вот ты где.'] },
-    // она реагирует на твой ПК (pc.js): процессор, батарея, сеть, флешка, игра
+    // она реагирует на твой Mac (pc.js): процессор, батарея, сеть, флешка, игра
     pc: {
       hot: ['Твой процессор на пределе. Я тоже нагреваюсь.', 'Процессор на {cpu} %. Жарко тут.', 'Горячо! Что там у тебя запущено?'],
       cool: ['Фух. Остывает.'],
@@ -1692,13 +1714,13 @@ export const LINES = {
     // она смотрит на твой экран (look.js): что она говорит заранее и когда не выходит
     look: {
       ask: 'Можно взглянуть на твой экран?',
-      local: 'Картинка твоего экрана уходит твоему ИИ, на этом ПК ({model}), а я говорю, что думаю. Ничего не покидает твой компьютер, и картинку я не храню.',
+      local: 'Картинка твоего экрана уходит твоему ИИ, на этом Mac ({model}), а я говорю, что думаю. Ничего не покидает твой компьютер, и картинку я не храню.',
       online: 'Картинка твоего экрана уходит в {service} ({model}), чтобы я могла её прокомментировать. Я её не храню, но они её получают: не стоит, когда на экране что-то личное.',
       auto: 'Иногда, когда ты на месте и сменилось окно. Выключить можно в моём меню.',
       yes: 'Да, смотри', no: 'Нет, спасибо',
       declined: 'Ладно, не смотрю.',
       on: 'Ладно. Буду иногда поглядывать.',
-      noVision: '{model} не умеет читать картинки. gemma3 умеет, на твоём ПК, и Gemini онлайн тоже: поменяй в моём меню › ИИ-модель.',
+      noVision: '{model} не умеет читать картинки. gemma3 умеет, на твоём Mac, и Gemini онлайн тоже: поменяй в моём меню › ИИ-модель.',
       noAI: 'Чтобы смотреть, мне нужен ИИ: правый клик по мне › ИИ-модель.',
       failed: 'Не получилось посмотреть: {error}',
     },
@@ -1743,8 +1765,16 @@ export const LINES = {
       sulk: ['Ну и иди к {rival}.', 'Я обиделась. Не видно?', 'Хм.'],
       forgive: ['…Ладно. В этот раз прощаю.', 'Хорошо, прощаю. Немножко.'],
     },
-    // в Windows отключены анимации: она почти не двигается и один раз говорит об этом
-    motion: { line: 'В Windows отключены анимации, поэтому я почти не двигаюсь.', quote: 'Хочешь, чтобы я всё равно двигалась? Это можно поменять в моём меню › Анимации.', full: 'Двигайся!', still: 'Не надо' },
+    // в macOS включено «Уменьшение движения»: она почти не двигается и один раз говорит об этом
+    motion: { line: 'В macOS включено «Уменьшение движения», так что я почти не двигаюсь.', quote: 'Хочешь, чтобы я всё равно двигалась? Это можно поменять в моём меню › Анимации.', full: 'Двигайся!', still: 'Не надо' },
+    // what she says when macOS hasn't let her do something yet
+    permission: {
+      screen: 'macOS пока не даёт мне видеть твой экран.',
+      screenHow: 'Разреши мне в Системных настройках › Конфиденциальность и безопасность › Запись экрана и системного звука, потом перезапусти меня.',
+      access: 'Чтобы нажимать «играть», «пауза» или «дальше», macOS должна мне разрешить.',
+      accessHow: 'Разреши мне в Системных настройках › Конфиденциальность и безопасность › Универсальный доступ. Громкость уже работает.',
+      settings: 'Открыть настройки',
+    },
     status: 'Claude работает над {project} уже {time}.',
     last: 'Последнее действие: {action}',
     sessions: 'Активных сессий: {count}',
@@ -1757,7 +1787,7 @@ export const LINES = {
     hooksFail: 'Не удалось изменить хуки: {error}',
     verbs: {
       Read: 'Читает', Write: 'Пишет', Edit: 'Правит', MultiEdit: 'Правит', NotebookEdit: 'Правит',
-      Bash: 'Запускает', PowerShell: 'Запускает', Grep: 'Ищет', Glob: 'Перебирает', WebFetch: 'Загружает',
+      Bash: 'Запускает', Grep: 'Ищет', Glob: 'Перебирает', WebFetch: 'Загружает',
       WebSearch: 'Ищет в сети', Agent: 'Поручает', Task: 'Поручает', TodoWrite: 'Планирует', Skill: 'Загружает',
       AskUserQuestion: 'Спрашивает', ExitPlanMode: 'Предлагает', default: 'Использует',
     },
@@ -1804,175 +1834,12 @@ const OTHERS = {
     },
   },
 };
-// On a Mac: what differs from Windows (the Dock and the menu bar, Finder, the Trash, the keychain,
-// macOS's settings), laid over the lines above. Every other "PC" becomes "Mac", and Ctrl+Alt+C, ⌃⌥C.
-// `mac`: what she says when macOS hasn't let her do something yet.
-const MAC = {
-  fr: {
-    chat: {
-      stillOpen: '{app} tourne encore : il te demande sûrement d’enregistrer quelque chose.',
-      shot: 'Capture faite : {name} ({where}).',
-      folders: { explorer: 'Le Finder', recycle: 'La corbeille' },
-    },
-    guide: {
-      icon: {
-        line: 'Mon icône, c’est là-haut, dans la barre des menus.',
-        hidden: 'Quand la barre des menus est pleine (ou qu’il y a l’encoche), macOS la cache. Clic droit sur moi : c’est le même menu.',
-      },
-    },
-    setup: {
-      installHow: 'C’est lui qui fait tourner l’IA sur ton Mac. Une ou deux minutes, et il va dans tes Applications.',
-      wakeFailedHow: 'Ouvre-le depuis tes Applications, puis reparle-moi.',
-      pasteHow: 'Je la garde sur ce Mac, dans ton trousseau.',
-    },
-    motion: { line: 'macOS a « Réduire les animations » activé, alors je bouge à peine.' },
-    mac: {
-      screen: 'macOS ne me laisse pas encore voir ton écran.',
-      screenHow: 'Autorise-moi dans Réglages Système › Confidentialité et sécurité › Enregistrement de l’écran et de l’audio du système, puis relance-moi.',
-      access: 'Pour appuyer sur lecture, pause ou suivant, macOS doit me laisser faire.',
-      accessHow: 'Autorise-moi dans Réglages Système › Confidentialité et sécurité › Accessibilité. Le volume, lui, marche déjà.',
-      settings: 'Ouvrir les réglages',
-    },
-  },
-  en: {
-    chat: {
-      stillOpen: '{app} is still running: it’s probably asking you to save something.',
-      shot: 'Screenshot taken: {name} ({where}).',
-      folders: { explorer: 'Finder', recycle: 'The Trash' },
-    },
-    guide: {
-      icon: {
-        line: 'My icon is right up there, in the menu bar.',
-        hidden: 'When the menu bar is full (or there’s a notch), macOS hides it. Right-click me: same menu.',
-      },
-    },
-    setup: {
-      installHow: 'It’s what runs the AI on your Mac. A minute or two, and it goes in your Applications.',
-      wakeFailedHow: 'Open it from your Applications, then talk to me again.',
-      pasteHow: 'I keep it on this Mac, in your keychain.',
-    },
-    motion: { line: 'macOS has Reduce motion on, so I’m barely moving.' },
-    mac: {
-      screen: 'macOS won’t let me see your screen yet.',
-      screenHow: 'Allow me in System Settings › Privacy & Security › Screen & System Audio Recording, then restart me.',
-      access: 'To press play, pause or next for you, macOS has to let me.',
-      accessHow: 'Allow me in System Settings › Privacy & Security › Accessibility. The volume already works.',
-      settings: 'Open Settings',
-    },
-  },
-  es: {
-    chat: {
-      stillOpen: '{app} sigue abierta: seguramente te pide guardar algo.',
-      shot: 'Captura hecha: {name} ({where}).',
-      folders: { explorer: 'El Finder', recycle: 'La papelera' },
-    },
-    guide: {
-      icon: {
-        line: 'Mi icono está ahí arriba, en la barra de menús.',
-        hidden: 'Cuando la barra de menús está llena (o hay muesca), macOS lo esconde. Clic derecho sobre mí: es el mismo menú.',
-      },
-    },
-    setup: {
-      installHow: 'Es lo que hace funcionar la IA en tu Mac. Uno o dos minutos, y va a tus Aplicaciones.',
-      wakeFailedHow: 'Ábrelo desde tus Aplicaciones y vuelve a hablarme.',
-      pasteHow: 'La guardo en este Mac, en tu llavero.',
-    },
-    motion: { line: 'macOS tiene «Reducir movimiento» activado, así que apenas me muevo.' },
-    mac: {
-      screen: 'macOS todavía no me deja ver tu pantalla.',
-      screenHow: 'Dame permiso en Ajustes del Sistema › Privacidad y seguridad › Grabación de pantalla y audio del sistema, y luego reiníciame.',
-      access: 'Para pulsar reproducir, pausa o siguiente, macOS tiene que dejarme.',
-      accessHow: 'Dame permiso en Ajustes del Sistema › Privacidad y seguridad › Accesibilidad. El volumen ya funciona.',
-      settings: 'Abrir Ajustes',
-    },
-  },
-  pt: {
-    chat: {
-      stillOpen: '{app} continua rodando: provavelmente está pedindo para você salvar algo.',
-      shot: 'Captura feita: {name} ({where}).',
-      folders: { explorer: 'O Finder', recycle: 'O Lixo' },
-    },
-    guide: {
-      icon: {
-        line: 'Meu ícone está lá em cima, na barra de menus.',
-        hidden: 'Quando a barra de menus está cheia (ou tem o notch), o macOS esconde ele. Clique direito em mim: é o mesmo menu.',
-      },
-    },
-    setup: {
-      installHow: 'É ele que roda a IA no seu Mac. Um ou dois minutos, e ele vai para os seus Aplicativos.',
-      wakeFailedHow: 'Abra ele pelos seus Aplicativos e fale comigo de novo.',
-      pasteHow: 'Eu guardo ela neste Mac, nas suas Chaves.',
-    },
-    motion: { line: 'O macOS está com “Reduzir movimento” ligado, então eu quase não me mexo.' },
-    mac: {
-      screen: 'O macOS ainda não me deixa ver a sua tela.',
-      screenHow: 'Me autorize em Ajustes do Sistema › Privacidade e Segurança › Gravação de Tela e Áudio do Sistema, depois me reinicie.',
-      access: 'Para apertar play, pausa ou próxima, o macOS precisa deixar.',
-      accessHow: 'Me autorize em Ajustes do Sistema › Privacidade e Segurança › Acessibilidade. O volume já funciona.',
-      settings: 'Abrir Ajustes',
-    },
-  },
-  ru: {
-    chat: {
-      stillOpen: '{app} всё ещё работает: наверное, просит что-то сохранить.',
-      shot: 'Скриншот готов: {name} ({where}).',
-      folders: { explorer: 'Finder', recycle: 'Корзина' },
-    },
-    guide: {
-      icon: {
-        line: 'Мой значок — вон там, наверху, в строке меню.',
-        hidden: 'Когда строка меню переполнена (или мешает вырез экрана), macOS его прячет. Правый клик по мне — то же меню.',
-      },
-    },
-    setup: {
-      installHow: 'Это она запускает ИИ у тебя на Mac. Минута-две, и она будет в «Программах».',
-      wakeFailedHow: 'Открой её из «Программ» и снова заговори со мной.',
-      pasteHow: 'Я храню его на этом Mac, в твоей связке ключей.',
-    },
-    motion: { line: 'В macOS включено «Уменьшение движения», так что я почти не двигаюсь.' },
-    mac: {
-      screen: 'macOS пока не даёт мне видеть твой экран.',
-      screenHow: 'Разреши мне в Системных настройках › Конфиденциальность и безопасность › Запись экрана и системного звука, потом перезапусти меня.',
-      access: 'Чтобы нажимать «играть», «пауза» или «дальше», macOS должна мне разрешить.',
-      accessHow: 'Разреши мне в Системных настройках › Конфиденциальность и безопасность › Универсальный доступ. Громкость уже работает.',
-      settings: 'Открыть настройки',
-    },
-  },
-};
-
-// The system she runs on ('win32', 'darwin'…), told once at start (app.js).
-let platform = 'win32';
-export function setPlatform(value) {
-  platform = value;
-}
-
-function overlay(base, patch) {
-  if (!patch || typeof patch !== 'object' || Array.isArray(patch)) return patch;
-  const out = { ...base };
-  for (const [k, v] of Object.entries(patch)) out[k] = overlay(base?.[k], v);
-  return out;
-}
-
-const forMac = new Map();
-function macLines(lang, base) {
-  if (forMac.has(lang)) return forMac.get(lang);
-  const convert = (value) => {
-    if (typeof value === 'string') return value.replace(/(?<![\p{L}\p{N}])(PC|ПК)(?![\p{L}\p{N}])/gu, 'Mac').replaceAll('Ctrl+Alt+C', '⌃⌥C');
-    if (Array.isArray(value)) return value.map(convert);
-    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, convert(v)]));
-    return value;
-  };
-  const result = overlay(convert(base), MAC[lang] || MAC.en);
-  forMac.set(lang, result);
-  return result;
-}
-
 const converted = new Map();
 export function linesFor(lang, assistant = 'claude') {
-  const base = platform === 'darwin' ? macLines(LINES[lang] ? lang : 'fr', LINES[lang] || LINES.fr) : LINES[lang] || LINES.fr;
+  const base = LINES[lang] || LINES.fr;
   const other = OTHERS[assistant];
   if (!other) return base;
-  const key = `${assistant}:${lang}:${platform}`;
+  const key = `${assistant}:${lang}`;
   if (converted.has(key)) return converted.get(key);
   // French drops the e of "de" and "que" before a vowel: "la fenêtre d'Antigravity"
   const elide = lang === 'fr' && /^[aeiouy]/i.test(other.name);

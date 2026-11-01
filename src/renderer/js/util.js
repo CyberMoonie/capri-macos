@@ -11,11 +11,11 @@ export const ease = {
   inOut: (t) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2),
 };
 
-// Calmer animations: when Windows has its animation effects off (prefers-reduced-motion), unless
-// her menu says otherwise (Animations: like Windows, full, reduced). Read live: `.matches`.
+// Calmer animations: when macOS has Reduce motion on (prefers-reduced-motion), unless
+// her menu says otherwise (Animations: like macOS, full, reduced). Read live: `.matches`.
 const systemReduced = matchMedia('(prefers-reduced-motion: reduce)');
 export const reducedMotion = {
-  setting: 'auto', // 'auto' (like Windows), 'full' or 'reduced'
+  setting: 'auto', // 'auto' (like macOS), 'full' or 'reduced'
   get matches() {
     return this.setting === 'reduced' || (this.setting === 'auto' && systemReduced.matches);
   },

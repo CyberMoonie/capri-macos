@@ -12,7 +12,7 @@ http.createServer((req, res) => {
 }).listen(47999, '127.0.0.1').unref();
 (async () => {
   const cfg = { apiKeys: {}, claudeMode: 'default', claudeCwd: process.cwd() };
-  // which note her chat shows: "local AI" only when the answers stay on this PC
+  // which note her chat shows: "local AI" only when the answers stay on this Mac
   assert(llm.isLocal('lmstudio', cfg) && !llm.isLocal('claude', cfg) && !llm.isLocal('pollinations', cfg), 'local providers');
   assert(llm.isLocal('custom', { customUrl: 'http://localhost:5000/v1' }), 'local custom url');
   assert(!llm.isLocal('custom', { customUrl: 'http://localhost.evil.com/v1' }), 'cloud custom url');

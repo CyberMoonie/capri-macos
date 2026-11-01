@@ -1,6 +1,6 @@
 // She looks at your screen and says something about it: when you ask (her menu › Look at my screen),
 // or on her own now and then (her menu, off until you turn it on). The first time, she tells you
-// where the picture goes: to the AI behind her chat, on your PC with a local model, else to that
+// where the picture goes: to the AI behind her chat, on your Mac with a local model, else to that
 // service. Then: a picture of the screen she's on (main.js keeps it in memory a moment, never on
 // disk), her eyes on the window in front while a scanline sweeps it, and one or two sentences from
 // her AI, in character. Her chat remembers what she said, for a while.
@@ -10,7 +10,7 @@ import { clean, mood } from './chat.js';
 
 const FIRST_AFTER = 2 * 60 * 1000; // turned on: her first look a couple of minutes later
 const EVERY = [8, 15];             // then every 8 to 15 minutes…
-const ACTIVE_MS = 90 * 1000;       // …if you're at your PC (the pointer moved lately)…
+const ACTIVE_MS = 90 * 1000;       // …if you're at your Mac (the pointer moved lately)…
 const SAME_WINDOW_MS = 25 * 60 * 1000; // …and on another window than last time (or a good while later)
 // what her AI is asked about the picture
 const PROMPT = 'React to what you saw, in character: name one or two concrete things from it (the app or website, a title, a name, a word), then be curious, playful or teasing about them. One or two short sentences, talking to them.';

@@ -35,7 +35,7 @@ function quoteIfNeeded(p) {
 
 function hasNode() {
   try {
-    return spawnSync('node', ['-v'], { windowsHide: true, timeout: 3000 }).status === 0;
+    return spawnSync('node', ['-v'], { timeout: 3000 }).status === 0;
   } catch {
     return false;
   }
@@ -47,9 +47,8 @@ function hookCommand(eventType) {
   if (!process.versions.electron) {
     return `${quoteIfNeeded(process.execPath)} ${quoteIfNeeded(script)} ${eventType}`;
   }
-  // the Mac app always runs it itself: Antigravity may be started with no node on its PATH
-  const packagedMac = process.platform === 'darwin' && !process.defaultApp;
-  if (!packagedMac && hasNode()) {
+  // the installed app always runs it itself: Antigravity may be started with no node on its PATH
+  if (process.defaultApp && hasNode()) {
     return `node ${quoteIfNeeded(script)} ${eventType}`;
   }
   return `ELECTRON_RUN_AS_NODE=1 ${quoteIfNeeded(process.execPath)} ${quoteIfNeeded(script)} ${eventType}`;

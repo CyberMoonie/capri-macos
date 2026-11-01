@@ -1,5 +1,6 @@
-// Capri's eyes on macOS: the counterpart of windows.ps1, plus the few things on a Mac that need a
-// native call (closing an app, the media keys, the apps installed). Built by scripts/build-mac-helper.js.
+// Capri's eyes on your Mac: the windows, the Dock, your desktops, what you plug in, plus the few
+// things that need a native call (closing an app, the media keys, the apps installed). Built by
+// scripts/build-mac-helper.js.
 //
 //   capri-helper watch <overlay window id> <capri pid>
 //       one JSON line whenever something changes: the window in front and the visible windows in
@@ -149,7 +150,7 @@ let AIS: [(String, String, String)] = [
   ("metaai", "\\bMeta AI\\b", ""),
 ]
 
-// Windows that aren't windows you work in: the menu bar, the Dock, Stage Manager's strip…
+// Windows (on screen) that aren't windows you work in: the menu bar, the Dock, Stage Manager's strip…
 let SYSTEM_OWNERS: Set<String> = [
   "Window Server", "Dock", "WindowManager", "Control Center", "Notification Center", "SystemUIServer",
   "Spotlight", "screencaptureui", "loginwindow", "Wallpaper",
@@ -337,7 +338,7 @@ final class Watch {
     if fg < 0 { fg = -fg } // only small windows: the first of them
     // an app in front with no window (Finder on the desktop, her own chat): not any of the windows
     if fg == 0 && frontPid > 0 { fg = -Int(frontPid) }
-    return "{\"fg\":\(fg),\"pid\":\(frontPid),\"app\":\(json(front?.bundleIdentifier ?? "")),\"taskbar\":false,\"ai\":\(ai(title)),\"game\":\(game.isEmpty ? "null" : json(game)),\"usb\":\(sticks()),\"plug\":\(plug),\"dock\":\(dock),\"space\":\(spaces),\"overview\":\(overview),\"titles\":\(titles),\"here\":\(overlay == 0 || here),\"wins\":[\(wins.joined(separator: ","))]}"
+    return "{\"fg\":\(fg),\"pid\":\(frontPid),\"app\":\(json(front?.bundleIdentifier ?? "")),\"ai\":\(ai(title)),\"game\":\(game.isEmpty ? "null" : json(game)),\"usb\":\(sticks()),\"plug\":\(plug),\"dock\":\(dock),\"space\":\(spaces),\"overview\":\(overview),\"titles\":\(titles),\"here\":\(overlay == 0 || here),\"wins\":[\(wins.joined(separator: ","))]}"
   }
 
   func run() {
@@ -424,7 +425,7 @@ final class Devices {
     IORegistryEntryCreateCFProperty(s, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue()
   }
 
-  // What it is, as Windows would class it (pc.js reads those), or nil to leave it out.
+  // What it is, as a class pc.js knows (DiskDrive, AudioEndpoint, Camera, HIDClass…), or nil to leave it out.
   func describe(_ s: io_object_t) -> (String, String)? {
     if IOObjectConformsTo(s, "IOHIDDevice") != 0 {
       // a Bluetooth keyboard, mouse or controller (USB ones are told by their USB device)

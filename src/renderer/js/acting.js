@@ -526,7 +526,7 @@ export const ACTS = {
     ],
   },
 
-  // ---- your PC (pc.js) ----
+  // ---- your Mac (pc.js) ----
 
   // overheating with your processor: head thrown back, fanning herself with one hand, heat coming
   // off her ('steam'), then a slump

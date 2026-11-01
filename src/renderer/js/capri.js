@@ -46,7 +46,7 @@ export class Capri {
     this.voice = voice;
 
     this.scale = 0.6;
-    this.view = { w: innerWidth, h: innerHeight, floor: innerHeight }; // floor: the top of the taskbar
+    this.view = { w: innerWidth, h: innerHeight, floor: innerHeight }; // floor: the bottom of her window
     this.pos = { x: innerWidth - 200, y: innerHeight - 6 }; // her feet
     this.facing = 1; // 1: as drawn (reaching left), -1: mirrored
     this.mode = 'idle'; // idle | work | alert | sleep
@@ -60,7 +60,7 @@ export class Capri {
     this.dormant = false; // asleep, down to her mask
     this.wander = true;
     this.possessWindows = true; // tray: "Possess my windows"
-    this.restOn = 'corner'; // where she rests when nothing's going on: her corner, or 'taskbar' (her menu)
+    this.restOn = 'corner'; // where she rests when nothing's going on: her corner, or 'dock' (her menu)
     this.nextHome = 0;
     this.dragging = false;
     this.track = [];      // where the pointer was lately while it holds her: [{ x, y, t }]
@@ -287,7 +287,6 @@ export class Capri {
   // Is this screen point on her body? Uses the cut-out's alpha so empty space stays click-through.
   hit(x, y) {
     if (this.hidden || this.p.alpha < 0.5) return false;
-    if (this.perch?.id === 'taskbar' && y > this.view.floor) return false; // the taskbar under her legs stays clickable
     const at = this.spritePoint(x, y);
     const sx = at.x;
     let sy = at.y;
@@ -345,11 +344,11 @@ export class Capri {
   // ---------- windows ----------
 
   setWindows(data) {
-    const dockCame = this.platform === 'darwin' && data.dock && !this.windows.dock;
+    const dockCame = data.dock && !this.windows.dock;
     this.windows = data;
-    // a Mac's Dock showing a moment (not just the pointer passing by): resting on it, she goes and
-    // stands on it, standing (not on a window), nothing more pressing than being idle or watching Claude work
-    if (dockCame && this.restOn === 'taskbar') {
+    // the Dock showing a moment (not just the pointer passing by): resting on it, she goes and stands
+    // on it, if she's standing (not on a window), with nothing more pressing than watching Claude work
+    if (dockCame && this.restOn === 'dock') {
       clearTimeout(this.dockTimer);
       this.dockTimer = setTimeout(() => {
         if (this.windows.dock && this.free && this.stance === 'stand' && ['idle', 'work'].includes(this.mode)) this.goHome();
@@ -374,20 +373,18 @@ export class Capri {
     return { x: win.x + dx, y: win.y + 3 + (SPRITE.feet.y - SPRITE.hip) * this.scale };
   }
 
-  // Resting on the taskbar, or on a Mac on the Dock, only while it shows (hidden: in her corner).
+  // Resting on the Dock, while it shows (hidden: in her corner).
   get onDock() {
-    return this.restOn === 'taskbar' && (this.platform !== 'darwin' || Boolean(this.windows.dock));
+    return this.restOn === 'dock' && Boolean(this.windows.dock);
   }
 
   canSit(win) {
-    if (win.id === 'taskbar') return this.platform !== 'darwin'; // a Mac's Dock: she stands on it
     const roomAbove = SPRITE.hip * this.scale + 12;
     return !win.max && win.w > 260 && win.y > roomAbove && win.y < this.view.floor - 80;
   }
 
   // Is her spot on that ledge hidden under a window that's above it?
   covered(win, x) {
-    if (win.id === 'taskbar') return false; // nothing goes over the taskbar
     const half = 34 * this.scale;
     const { wins } = this.windows;
     for (const o of wins) {
@@ -397,35 +394,25 @@ export class Capri {
     return false; // window not in the list any more
   }
 
-  // A window she could sit on, the one in front first. Returns { win, dx } or null.
-  // The top of the taskbar (the bottom of her screen), as a ledge to sit on like a window's: her
-  // legs hang down behind it.
-  ledge() {
-    return { id: 'taskbar', x: 0, y: this.view.floor, w: this.view.w, h: this.view.h - this.view.floor, max: false };
-  }
-
-  // What she's perched on, from its id: a window, or the taskbar.
+  // What she's perched on, from its id.
   perchWin(id) {
-    return id === 'taskbar' ? this.ledge() : this.windows.wins.find((w) => w.id === id);
+    return this.windows.wins.find((w) => w.id === id);
   }
 
-  // Back to where she rests: her corner, or sitting on the taskbar below it. On a Mac, standing on
-  // the Dock while it shows (all of her in sight: sitting, her legs would be behind it), else her corner.
+  // Back to where she rests: her corner, or resting on the Dock, standing on it while it shows (all of
+  // her in sight: sitting, her legs would be behind it), else her corner.
   goHome() {
     const post = this.spot('post');
+    if (this.restOn !== 'dock') return this.teleport(post);
     const near = (at) => this.stance === 'stand' && Math.hypot(at.x - this.pos.x, at.y - this.pos.y) < 120;
-    if (this.platform === 'darwin' && this.restOn === 'taskbar') {
-      const dock = this.windows.dock;
-      const at = dock ? { x: clamp(this.view.w * 0.5 + 90, dock.x + 80, dock.x + dock.w - 80), y: dock.y - 6 } : post;
-      if (dock) this.dockSpot = at;
-      return near(at) ? Promise.resolve() : this.teleport(at);
-    }
-    if (this.restOn !== 'taskbar') return this.teleport(post);
-    if (this.stance === 'sit' && this.perch?.id === 'taskbar') return Promise.resolve();
-    // left of the clock and the tray icons, right of the middle (the app icons, on Windows 11)
-    return this.sitOn({ win: this.ledge(), dx: clamp(this.view.w - 440, this.view.w * 0.6, post.x) });
+    const dock = this.windows.dock;
+    // just right of the middle, on the Dock's icons
+    const at = dock ? { x: clamp(this.view.w * 0.5 + 90, dock.x + 80, dock.x + dock.w - 80), y: dock.y - 6 } : post;
+    if (dock) this.dockSpot = at;
+    return near(at) ? Promise.resolve() : this.teleport(at);
   }
 
+  // A window she could sit on, the one in front first. Returns { win, dx } or null.
   pickSeat({ frontOnly = false, except = null } = {}) {
     const options = [];
     for (const win of this.windows.wins) {
@@ -559,7 +546,7 @@ export class Capri {
       return;
     }
 
-    // a Mac's Dock gone from under her (or while she was on her way there): back to her corner
+    // the Dock gone from under her (or while she was on her way there): back to her corner
     if (this.dockSpot && !this.windows.dock && this.free && this.stance === 'stand') {
       const was = this.dockSpot;
       this.dockSpot = null;
@@ -569,7 +556,7 @@ export class Capri {
       }
     }
 
-    // resting on the taskbar: a little while after anything happens, she goes back to sit on it
+    // resting on the Dock: a little while after anything happens, she goes back to stand on it
     if (this.onDock && this.mode === 'idle' && this.stance === 'stand'
       && now - this.lastActivity > 6000 && now > this.nextHome) {
       this.nextHome = now + 8000;
@@ -602,12 +589,6 @@ export class Capri {
         this.teleport(to, { face: this.mouse.x < to.x ? 1 : -1 }).then(() => this.perform('curious', this.mouse && this.mouse.x < this.pos.x ? -1 : 1));
         return;
       }
-    }
-    if (this.stance === 'sit' && this.perch?.id === 'taskbar') {
-      // nothing to hop off or take over down there: a flourish, or off for a bit (she comes back)
-      if (Math.random() < 0.6) this.flourish();
-      else this.teleport(this.spot('random'));
-      return;
     }
     if (this.stance === 'sit') {
       const r = Math.random();
@@ -1632,7 +1613,7 @@ export class Capri {
 
   // Her intro, when she starts: she grabs your screen by its edges, huge, says hi, then her hands
   // slip and she dives down to where she stands, and her body unfolds from her face (fx.intro).
-  // `still`: no motion, it comes and goes where it is (Windows' animations off).
+  // `still`: no motion, it comes and goes where it is (Reduce motion on).
   async intro(at, { label = 'hi', caption = 'PROJECT CAPRICORN', still = reducedMotion.matches } = {}) {
     const p = this.p;
     this.pos = { ...at };
@@ -1669,7 +1650,7 @@ export class Capri {
   // ---------- showing you things ----------
 
   // The point of `rect` (overlay coordinates) she aims at from where she is: its closest point,
-  // a little inside. Off her screen (the tray, down in the taskbar), the edge of her screen.
+  // a little inside. Off her screen (her icon, up in the menu bar), the edge of her screen.
   aimPoint(rect) {
     const { w, h } = this.view;
     const sh = this.limb(this.armToward(rect.x + rect.w / 2 < this.pos.x ? -1 : 1)).shoulder;
@@ -2364,7 +2345,7 @@ export class Capri {
     return cursor;
   }
 
-  // ---------- your PC (pc.js) ----------
+  // ---------- your Mac (pc.js) ----------
 
   // Is she out and free to act, with nothing else going on?
   get free() {
@@ -2400,7 +2381,7 @@ export class Capri {
     if (this.free) this.perform('hop');
   }
 
-  // A USB stick plugged in: she dives down into it (by the clock, where Windows shows it), has a
+  // A USB stick plugged in: she dives down into it (bottom right, toward where it plugs in), has a
   // look around in there, and comes back out to her spot.
   async visit(at) {
     if (!this.free || reducedMotion.matches) return false;
@@ -2437,7 +2418,7 @@ export class Capri {
   async jealous(win, { say = '', takeOver = true } = {}) {
     if (this.busy || this.stowed || this.dormant || this.hidden || this.dragging || SPUN.has(this.stance) || this.stance === 'fall') return false;
     const take = takeOver && this.possessWindows && !reducedMotion.matches;
-    if (this.canSit(win) && win.id !== 'taskbar' && !this.covered(win, win.x + win.w * 0.5)) {
+    if (this.canSit(win) && !this.covered(win, win.x + win.w * 0.5)) {
       if (!(this.stance === 'sit' && this.perch?.id === win.id)) {
         await this.sitOn({ win, dx: clamp(win.w * 0.5, 60, Math.max(60, win.w - 190)) });
       }

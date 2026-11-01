@@ -13,7 +13,7 @@ import { Bond, Jealousy } from './bond.js';
 import { Reminders, clock } from './reminders.js';
 import { Look } from './look.js';
 import { Pc } from './pc.js';
-import { linesFor, setPlatform } from './lines.js';
+import { linesFor } from './lines.js';
 import { pick, fmt, reducedMotion } from './util.js';
 
 const host = window.host;
@@ -31,7 +31,7 @@ function loadImage(src) {
 const CUTINS = ['grin', 'laugh', 'eyes', 'many', 'look'];
 const WATCH_MS = 2000; // how often she checks the pointer still reaches her
 const FOLLOW_AFTER = 2; // checks in a row with the pointer on another screen before she follows it there
-const AWAY_MS = 15 * 60 * 1000; // the pointer still this long: you were away from your PC
+const AWAY_MS = 15 * 60 * 1000; // the pointer still this long: you were away from your Mac
 const SNOOZE_MS = 10 * 60 * 1000;
 
 // what you made her, from the config (custom.js)
@@ -51,8 +51,7 @@ async function boot() {
     document.fonts.load('400 11px "JetBrains Mono"'),
   ]);
   document.documentElement.lang = config.lang;
-  setPlatform(config.platform); // her words for Windows or for a Mac
-  // her animations: like Windows, full or reduced (her menu)
+  // her animations: like macOS (Reduce motion), full or reduced (her menu)
   const applyMotion = (setting) => {
     reducedMotion.setting = setting || 'auto';
     document.documentElement.dataset.motion = reducedMotion.matches ? 'reduced' : 'full';
@@ -65,11 +64,8 @@ async function boot() {
     intro,
   });
   fx.resize(innerWidth, innerHeight);
-  // how far the top of the taskbar is from the bottom of her window: she covers it too while she
-  // rests on it (the floor she stands on stays its top)
-  let floorGap = config.floorGap ?? 0;
   const chip = new Chip(document.getElementById('chip'));
-  chip.place(innerWidth, innerHeight - floorGap);
+  chip.place(innerWidth, innerHeight);
   const mask = new Mask(document.getElementById('mask'));
 
   const voice = new Voice();
@@ -92,8 +88,7 @@ async function boot() {
   capri.wander = config.wander;
   capri.possessWindows = config.possess;
   capri.restOn = config.rest || 'corner';
-  capri.platform = config.platform;
-  capri.setView(innerWidth, innerHeight, innerHeight - floorGap);
+  capri.setView(innerWidth, innerHeight, innerHeight);
   capri.setScale(config.scale);
 
   const mission = new Mission();
@@ -139,7 +134,7 @@ async function boot() {
     }
   };
   let lastMove = performance.now();
-  let onBack = null; // (away ms) => you're back at your PC after a while (the bond, below)
+  let onBack = null; // (away ms) => you're back at your Mac after a while (the bond, below)
   window.addEventListener('mousemove', (e) => {
     const now = performance.now();
     if (now - lastMove > AWAY_MS) onBack?.(now - lastMove);
@@ -156,7 +151,7 @@ async function boot() {
     hoverChip();
   });
   // Where the pointer really is, every couple of seconds: if it moved over her window and no
-  // mousemove came, the hook that brings it to her is gone (Windows drops it without a word, after
+  // mousemove came, the moves that bring it to her are gone (they can stop without a word, after
   // sleep say), and main.js puts in a new one.
   let seen = null;
   let rearmedAt = -Infinity;
@@ -255,7 +250,7 @@ async function boot() {
   const look = new Look({ capri, panel, brain, chat, guide, host, fx, voice, active: () => performance.now() - lastMove });
   look.configure(config);
   chat.look = look; // "regarde mon écran" in her chat
-  // your PC as she feels it (pc.js): the processor, the battery, the network, a USB stick, a game
+  // your Mac as she feels it (pc.js): the processor, the battery, the network, a USB stick, a game
   const pc = new Pc({ capri, panel, brain, host, voice, chat, guide });
   pc.enabled = config.pcReact !== false;
   pc.gameMode = config.gameMode || 'hide';
@@ -347,11 +342,11 @@ async function boot() {
       line: fmt(up.line, { percent: bond.percent }), quote: up.quote, progress: bond.percent / 100, hold: 9000,
     });
   }, 3000);
-  // time spent together: a little sync for every ten minutes you're at your PC with her out
+  // time spent together: a little sync for every ten minutes you're at your Mac with her out
   setInterval(() => {
     if (performance.now() - lastMove < 10 * 60 * 1000 && !capri.stowed) bond.add('time', 1);
   }, 10 * 60 * 1000);
-  // back at your PC after a while: once she's attached to you, she's glad to see you
+  // back at your Mac after a while: once she's attached to you, she's glad to see you
   onBack = () => {
     if (bond.stage < 2 || capri.stowed) return;
     capri.wake();
@@ -521,11 +516,10 @@ async function boot() {
 
   // her window resized, or moved to another screen (whose pixels may be another size)
   let dpr = window.devicePixelRatio;
-  const applySize = ({ width, height, gap = 0 }) => {
-    floorGap = gap;
+  const applySize = ({ width, height }) => {
     fx.resize(width, height);
-    chip.place(width, height - gap);
-    capri.setView(width, height, height - gap);
+    chip.place(width, height);
+    capri.setView(width, height, height);
     if (window.devicePixelRatio !== dpr) {
       dpr = window.devicePixelRatio;
       capri.setScale(capri.scale); // her drawing redone at the new screen's pixels
@@ -593,8 +587,8 @@ async function boot() {
   };
   window.addEventListener('resize', () => {
     fx.resize(innerWidth, innerHeight);
-    chip.place(innerWidth, innerHeight - floorGap);
-    capri.setView(innerWidth, innerHeight, innerHeight - floorGap);
+    chip.place(innerWidth, innerHeight);
+    capri.setView(innerWidth, innerHeight, innerHeight);
   });
 
   host.onConfig((cfg) => {
@@ -750,7 +744,7 @@ async function boot() {
         else panel.say({ kind: 'error', line: fmt(t.hooksFail, { error: cmd.error }), hold: 9000 });
         break;
       // --dev helpers
-      case 'intro': // her intro again, as when she starts (still: as with Windows' animations off)
+      case 'intro': // her intro again, as when she starts (still: as with macOS's Reduce motion on)
         panel.hide();
         await capri.intro(capri.spot('post'), cmd.still ? { still: true } : {});
         break;
@@ -798,7 +792,7 @@ async function boot() {
   if (config.visible === false) capri.stowNow();
   else if (intro) await capri.intro(capri.spot('post'));
   else await capri.materialize(capri.spot('post'));
-  // Windows has its animations off and she's following it: she barely moves. The first time, she
+  // macOS has Reduce motion on and she's following it: she barely moves. The first time, she
   // says so and asks whether to move anyway (her menu › Animations changes it later).
   if (reducedMotion.setting === 'auto' && reducedMotion.system && !config.motionAsked) {
     const m = brain.t.motion;

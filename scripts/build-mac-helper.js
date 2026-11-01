@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
-// Builds src/main/mac/capri-helper (her eyes on macOS) from its Swift source, when it's missing or
-// older than the source. Nothing to do on Windows and Linux. Needs Apple's command line tools
-// (`xcode-select --install`); without them she still starts, only without seeing your windows.
+// Builds src/main/mac/capri-helper (her eyes on your Mac) from its Swift source, when it's missing or
+// older than the source. Needs Apple's command line tools (`xcode-select --install`); without them
+// she still starts, only without seeing your windows.
 //
 //   node scripts/build-mac-helper.js              for this Mac
-//   node scripts/build-mac-helper.js --universal  Apple silicon and Intel in one (for `npm run dist:mac`)
+//   node scripts/build-mac-helper.js --universal  Apple silicon and Intel in one (for `npm run dist`)
 
 const fs = require('node:fs');
 const os = require('node:os');
@@ -24,7 +24,10 @@ function compile(target, out) {
 }
 
 function build(universal) {
-  if (process.platform !== 'darwin') return true;
+  if (process.platform !== 'darwin') {
+    console.error('[capri] Capri for macOS: build and run her on a Mac.');
+    return false;
+  }
   const fresh = fs.existsSync(OUT) && fs.statSync(OUT).mtimeMs >= fs.statSync(SOURCE).mtimeMs;
   const arches = spawnSync('lipo', ['-archs', OUT], { encoding: 'utf8' }).stdout?.trim().split(/\s+/) || [];
   if (fresh && (!universal || (arches.includes('arm64') && arches.includes('x86_64')))) return true;
