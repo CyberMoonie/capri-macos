@@ -9,6 +9,8 @@ import { pick, fmt } from './util.js';
 import { ASSISTANT_NAMES } from './lines.js';
 import { parseReminder, parseWhen, clock } from './reminders.js';
 
+const lowerFirst = (text) => text.charAt(0).toLowerCase() + text.slice(1);
+
 const REMEMBER = 20; // messages she has in mind when answering
 const KEEP = 60;     // messages she remembers across restarts (memory.json)
 // her language, where small models need it: how she says "we" (else it's in English), and the last line
@@ -36,14 +38,14 @@ const MEDIA_ASK = [
   ['pause', /\b(pause|pausa|pausar)\b|stop (the )?music|arrête la musique|пауз/i],
   ['next', /\b(next|skip|suivante?|siguiente|próxima|proxima)\b|passe (à )?la suivante|salta|pula|следующ/i],
   ['previous', /\b(previous|précédente?|anterior)\b|предыдущ/i],
-  ['play', /\b(resume|reprends|reanuda|retoma)\b|relance la musique|remets la musique|продолж/i],
+  ['play', /\b(resume|unpause|reprends|reanuda|retoma)\b|relance la musique|remets la musique|продолж/i],
   ['volup', /\b(louder|plus fort)\b|monte le son|turn (it )?up|sube el volumen|aumenta o volume|громче/i],
   ['voldown', /\b(quieter|moins fort)\b|baisse le son|turn (it )?down|baja el volumen|abaixa o volume|тише/i],
   ['mute', /\bmute\b|coupe le son|silencia|sem som|выключи звук/i],
 ];
 const MUSIC_WORD = /musi|chanson|song|track|titre|morceau|spotify|canci|faixa|песн|музык|трек/i;
 // "put X on Spotify", "mets X sur Spotify", "pon X en Spotify", "coloca X no Spotify", "включи X в Spotify"
-const SPOTIFY_ASK = /(?:play|put on|put|mets|joue|lance|écoute|pon|toca|reproduce|coloca|toque|включи|поставь)\s+(?:moi\s+|me\s+)?(.+?)\s+(?:on|sur|en|no|na|в)\s+spotify/i;
+const SPOTIFY_ASK = /(?:play|put on|put|mets|joue|lance|écoute|pon|toca|reproduce|coloca|toque|включи|поставь)\s+(?:moi\s+|me\s+)?(.+?)\s+(?:on|from|in|via|sur|dans|de|en|desde|no|na|do|pelo|в|из)\s+(?:spoti\w*|spotf\w*)/i;
 const MEDIA_ACTIONS = new Set(MEDIA_ASK.map(([action]) => action));
 // "mets Bohemian Rhapsody sur YouTube", "play Daft Punk on youtube"
 const YOUTUBE_ASK = /(?:play|put on|put|mets|met|joue|lance|écoute|pon|toca|reproduce|coloca|bota|toque|включи|поставь)(?:[- ]moi|[- ]me|me)?\s+(.+?)\s+(?:on|sur|en|no|na|в)\s+youtube/i;
@@ -62,7 +64,18 @@ const PLAY_AFTER = /\s(?:et|and|y|e|и)\s+(?:mets|met|joue|play|put on|pon|toca|
 // "lance la musique de Daft Punk", "start the song X": an app verb, but music right after it
 const MUSIC_START = /^(?:capri,?\s+)?(?:lance|démarre|demarre|start|launch|écoute|ecoute|pon|toca)(?:[- ]moi|[- ]me)?\s+(?:la |le |une? |the |some )?(?:musique|music|chanson|son|morceau|song|track|canci[óo]n|m[úu]sica|песню|музыку)\s+(.{2,100})$/i;
 // "mets ce que tu veux", "play whatever you want": she picks (her tag)
-const HER_PICK = /tu veux|ton choix|surprends|you want|whatever|your choice|surprise me|quieras|tu elecci[óo]n|quiser|sua escolha|хочешь|на твой выбор/i;
+const HER_PICK = /tu veux|ton choix|surprends|n'importe|au hasard|you want|whatever|your choice|your pick|surprise me|\bany(?:thing| song| track| music)\b|\brandom\b|\bsomething\b|quieras|tu elecci[óo]n|cualquier|quiser|sua escolha|qualquer|хочешь|на твой выбор|любую|что-нибудь/i;
+// Spotify, typed in a hurry too ("spotifu", "spotfy")
+const SPOTIFY_WORD = /\bspoti\w*|\bspotf\w*/i;
+// "play it", "put that one on", "mets-la", "ponla": the song she just named
+const PLAY_IT = /^(?:(?:yes|yeah|ok|okay|sure|oui|ouais|vas-y|s[íi]|sim|да)[,!.\s]+)?(?:play|put on|put|mets|joue|pon|toca|coloca|bota|включи|поставь)[- ]?(?:it|that|this|that one|this one|that song|this song|la|le|ça|ca|esa|esta|eso|essa|isso|её|ее|его|эту)(?:\s+on)?(?:\s+(?:on|from|in|sur|en|no|na|в)\s+(spoti\w*|spotf\w*|youtube))?[\s.!?]*$/i;
+// A song she named in her answer without her tag (a small model often forgets it): “Title” by Artist,
+// as "Artist - Title", else a title in quotes.
+export function songIn(text) {
+  const m = /[“"«*]([^”"»*\n]{2,80})[”"»*]\s*(?:by|de|par|por|от|—|–|-)\s+([^\n.,!?;:()]{2,60})/i.exec(text || '');
+  if (m) return `${m[2].trim()} - ${m[1].trim()}`;
+  return /[“"«]([^”"»\n]{2,80})[”"»]/.exec(text || '')?.[1].trim() || null;
+}
 // what's left when it doesn't say which song ("mets de la musique", "play something")
 const VAGUE_SONG = /^(?:(?:de\s+la|du|des|la|le|les|une?|some|a|the|un|algo\s+de|alguma|um|uma|что-нибудь)\s+)?(?:musique|music|son|sons|chanson|morceau|truc|quelque\s+chose|something|song|tunes?|m[úu]sica|canci[óo]n|algo|coisa|музыку|песню)?\s*[.!?]*$/iu;
 // "trouve mon CV", "où est le pdf du contrat", "find my report", "найди файл…": her search verbs, and
@@ -365,6 +378,16 @@ export class Chat {
       return;
     }
     const snap = await this.host.lookSnap();
+    if (snap.code === 'screen') {
+      // macOS hasn't let her see the screen: what to allow, and a button to it (not her AI making excuses)
+      const need = this.needs('screen');
+      say(need.line, need.face);
+      this.panel.setActions([{ id: 'settings', label: this.brain.t.mac.settings, primary: true }, { id: 'no', label: this.t.no }], (id) => {
+        this.panel.setActions([]);
+        if (id === 'settings') this.host.openMacSettings('screen');
+      });
+      return undefined;
+    }
     if (!snap.ok) return say(fmt(tl.failed, { error: snap.error }));
     this.look.effect();
     const res = await this.host.lookSay({
@@ -422,8 +445,24 @@ export class Chat {
     }
     const media = MEDIA_ASK.find(([, re]) => re.test(text))?.[0];
     if (media && (count <= 5 || MUSIC_WORD.test(text))) return { kind: 'media', action: media };
+    // a Mac knows what's playing: "play", "play the music", "play spotify" pick it up where it stopped
+    if (this.capri?.platform === 'darwin') {
+      const what = PLAY_ASK.exec(text.trim())?.[1]?.trim();
+      if (/^play[\s.!?]*$/i.test(text.trim()) || (what && !HER_PICK.test(what) && (VAGUE_SONG.test(what) || /^(?:spotify|apple music|music app)[.!?]*$/i.test(what)))) {
+        return { kind: 'media', action: 'play' };
+      }
+    }
+    // "play it": the song she just named, where you say (else where her menu says)
+    const again = PLAY_IT.exec(text.trim());
+    if (again) {
+      // no song named lately: she's the one to ask which (her answer), not a song called "that"
+      if (!this.suggested) return null;
+      const where = (again[1] || '').toLowerCase();
+      return SPOTIFY_WORD.test(where) ? { kind: 'music', song: this.suggested } : where === 'youtube' ? { kind: 'youtube', song: this.suggested } : { kind: 'play', song: this.suggested };
+    }
     const song = SPOTIFY_ASK.exec(text)?.[1];
-    if (song) return { kind: 'music', song };
+    // "play any song from spotify": she picks it (her answer), then it plays there
+    if (song && !VAGUE_SONG.test(song) && !HER_PICK.test(song)) return { kind: 'music', song };
     const video = YOUTUBE_ASK.exec(text)?.[1];
     if (video) return { kind: 'youtube', song: songOf(video) };
     const app = this.askedToClose(text);
@@ -467,7 +506,10 @@ export class Chat {
     }
     if (asked.kind === 'media') {
       this.capri.pulse();
-      return (await this.host.media(asked.action)) ? { line: t.media[asked.action], face: 'smug' } : null;
+      const res = await this.host.media(asked.action);
+      if (res?.need) return this.needs(res.need);
+      if (res?.already) return { line: t.media[`${res.already}Already`], face: 'aside' };
+      return res ? { line: t.media[asked.action], face: 'smug' } : null;
     }
     if (asked.kind === 'music') {
       this.zap();
@@ -494,7 +536,7 @@ export class Chat {
       // "…and open the folder" / "…and open it": done right away, on the newest one
       if (asked.then === 'folder' && (await this.host.openFile(results[0].path, true))) lines.push(fmt(t.folderOpened, { name: results[0].name }));
       // (never a program or a script on its own: that one waits for its button)
-      const runs = /\.(exe|bat|cmd|ps1|vbs|vbe|js|jse|wsf|msi|reg|scr|com|jar|hta)$/i.test(results[0].name);
+      const runs = /\.(exe|bat|cmd|ps1|vbs|vbe|js|jse|wsf|msi|reg|scr|com|jar|hta|app|command|tool|sh|zsh|bash|csh|pkg|mpkg|dmg|scpt|scptd|applescript|workflow|terminal|action|prefpane|saver|osax|kext)$/i.test(results[0].name);
       if (asked.then === 'open' && !runs && (await this.host.openFile(results[0].path))) lines.push(fmt(t.opened, { app: results[0].name }));
       return { line: lines.join('\n'), face: 'smug', files: results };
     }
@@ -504,8 +546,11 @@ export class Chat {
       await new Promise((r) => setTimeout(r, 180));
       const shot = await this.host.screenshot();
       document.documentElement.style.visibility = '';
+      if (shot?.need) return this.needs(shot.need);
       this.voice.play('tick');
-      return shot ? { line: fmt(t.shot, { name: shot.name }), face: 'smug', files: [shot] } : null;
+      // on a Mac, where its own screenshots go: your desktop, or the folder you picked for them
+      const where = shot && (shot.where === 'desktop' ? lowerFirst(t.folders.desktop) : shot.folder);
+      return shot ? { line: fmt(t.shot, { name: shot.name, where }), face: 'smug', files: [shot] } : null;
     }
     if (asked.kind === 'play') {
       // what came before an "and" first ("ouvre discord et…"), unless it's YouTube, where the song goes anyway
@@ -513,7 +558,7 @@ export class Chat {
         ? await this.doNow({ kind: 'open', text: asked.before }) : null;
       // "joue à Brawlhalla" is a game, "lance spotify" an app; anything else, a song
       const game = await this.host.findLaunch(asked.song);
-      const then = game && ['steam', 'epic', 'app', 'file'].includes(game.kind) && !game.risky ? await this.openNow(game) : await this.youtube(asked.song);
+      const then = game && ['steam', 'epic', 'app', 'file'].includes(game.kind) && !game.risky ? await this.openNow(game) : await this.song(asked.song);
       if (!first?.line) return then;
       return { line: [first.line, then?.line].filter(Boolean).join('\n'), face: then?.face || first.face };
     }
@@ -525,6 +570,14 @@ export class Chat {
     }
     if (!item) return null; // nothing by that name here: her tag may still say what you meant
     return this.openNow(item);
+  }
+
+  // macOS hasn't let her do that yet ('screen', 'accessibility'): what to allow, and a button to it.
+  needs(page) {
+    const m = this.brain.t.mac;
+    return page === 'screen'
+      ? { line: `${m.screen}\n${m.screenHow}`, face: 'aside', settings: page }
+      : { line: `${m.access}\n${m.accessHow}`, face: 'aside', settings: page };
   }
 
   // An app, a game, a file or a folder: opened, or behind a button when it would run something.
@@ -539,6 +592,13 @@ export class Chat {
   // how she calls it: a folder like Downloads in her words, anything else by its name
   nameOf(item) {
     return item.kind === 'known' ? this.t.folders[item.id] || item.name : item.name;
+  }
+
+  // A song named in your message: on Spotify or on YouTube, as her menu says (Music on).
+  async song(song) {
+    if (this.musicApp !== 'spotify') return this.youtube(song);
+    this.zap();
+    return (await this.host.music(song)) ? { line: fmt(this.t.music, { song }), face: 'laugh' } : null;
   }
 
   // The song itself on YouTube (the right video, not a search), in your browser.
@@ -566,6 +626,7 @@ export class Chat {
       return undefined;
     }
     if (done?.offer) return this.launch(done.offer, answer); // it would run something: your click first
+    if (done?.settings) return this.toSettings(done, answer);
     if (done?.files) {
       // what she found (or the screenshot): a button to open the first, and to see where it is
       this.addLine(answer, done.line, done.face);
@@ -579,6 +640,11 @@ export class Chat {
       });
       return undefined;
     }
+    // a song she named (her tag, or just in what she said): kept for "play it"
+    const sung = TAG.exec(raw);
+    const named = sung && sung[1].toLowerCase() === 'music' ? sung[2].trim() : songIn(clean(raw));
+    // asked about music and she named none: "play that" then isn't an older song of hers
+    if (named || LISTEN.test(text) || HER_PICK.test(text)) this.suggested = named || null;
     if (done) return this.addLine(answer, done.line, done.face);
     if (asked?.kind === 'remind') return undefined; // no time said: her answer asks when
     if (asked?.kind === 'close') return this.offerClose(asked.name, answer);
@@ -586,13 +652,14 @@ export class Chat {
     const closeTag = tagged(raw);
     if (closeTag) return wanted('close', text) ? this.offerClose(closeTag, answer) : undefined;
     const tag = TAG.exec(raw);
-    if (!tag) return undefined;
+    // asked to play something and she named a song but forgot her tag: it plays all the same
+    if (!tag) return named && LISTEN.test(text) && (HER_PICK.test(text) || wanted('music', text)) ? this.pick(named, text, answer) : undefined;
     const kind = tag[1].toLowerCase();
     const value = tag[2].trim();
     if (!value || !wanted(kind, text)) return undefined;
     if (kind === 'media') return MEDIA_ACTIONS.has(value.toLowerCase()) ? this.media(value.toLowerCase(), answer) : undefined;
     // a song she picked: on YouTube, the right video (on Spotify if that's what you said)
-    if (kind === 'music') return /spotify/i.test(text) ? this.music(value, answer) : this.playOn(value, answer);
+    if (kind === 'music') return this.pick(value, text, answer);
     if (kind === 'site') return this.offerSite(value, answer);
     const item = await this.host.findLaunch(value);
     if (item) return this.launch(item, answer);
@@ -630,16 +697,33 @@ export class Chat {
     this.addLine(answer, res.ok ? fmt(t.opened, { app: this.nameOf(item) }) : `${t.failed} ${res.error}`, res.ok ? 'laugh' : 'aside');
   }
 
+  // A song she picked: on Spotify if you said so (or her menu does), else the right video on YouTube.
+  pick(song, text, answer) {
+    if (/youtube/i.test(text)) return this.playOn(song, answer);
+    return SPOTIFY_WORD.test(text) || this.musicApp === 'spotify' ? this.music(song, answer) : this.playOn(song, answer);
+  }
+
   async playOn(song, answer) {
     const done = await this.youtube(song);
     if (done) this.addLine(answer, done.line, done.face);
   }
 
+  // What macOS needs you to allow, and a button to the page of System Settings where you do it.
+  toSettings(done, answer) {
+    this.addLine(answer, done.line, done.face);
+    this.panel.setActions([{ id: 'settings', label: this.brain.t.mac.settings, primary: true }, { id: 'no', label: this.t.no }], (id) => {
+      this.panel.setActions([]);
+      if (id === 'settings') this.host.openMacSettings(done.settings);
+    });
+  }
+
   // The media keys: pause, next, louder…
   async media(action, answer) {
     this.capri.pulse();
-    const ok = await this.host.media(action);
-    if (ok) this.addLine(answer, this.t.media[action], 'smug');
+    const res = await this.host.media(action);
+    if (res?.need) this.toSettings(this.needs(res.need), answer);
+    else if (res?.already) this.addLine(answer, this.t.media[`${res.already}Already`], 'aside');
+    else if (res) this.addLine(answer, this.t.media[action], 'smug');
   }
 
   // A Spotify search, in the app if it's there.

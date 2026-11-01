@@ -13,7 +13,7 @@ const EVERY = [8, 15];             // then every 8 to 15 minutes…
 const ACTIVE_MS = 90 * 1000;       // …if you're at your PC (the pointer moved lately)…
 const SAME_WINDOW_MS = 25 * 60 * 1000; // …and on another window than last time (or a good while later)
 // what her AI is asked about the picture
-const PROMPT = 'This is a picture of the user\'s screen right now. If you see a small figure with a big red mane, that\'s you: leave it out. Name one concrete thing you really see on it (the app or website, a title, a picture, a word), then react to it in character: curious, playful or teasing. One or two short sentences, talking to them.';
+const PROMPT = 'React to what you saw, in character: name one or two concrete things from it (the app or website, a title, a name, a word), then be curious, playful or teasing about them. One or two short sentences, talking to them.';
 
 export class Look {
   constructor({ capri, panel, brain, chat, guide, host, fx, voice, active }) {
@@ -129,6 +129,12 @@ export class Look {
         this.capri.wake();
       }
       const snap = await this.host.lookSnap();
+      if (snap.code === 'screen') {
+        // macOS hasn't let her see the screen: said when you ask (her looks on her own stop there)
+        if (this.auto) this.host.setConfig({ watchScreen: false });
+        if (manual) this.guide.permission('screen');
+        return;
+      }
       if (!snap.ok) {
         if (manual) this.panel.say({ kind: 'info', face: 'aside', line: fmt(t.failed, { error: snap.error }), hold: 6000 });
         return;

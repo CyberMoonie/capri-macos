@@ -81,6 +81,19 @@ export class Guide {
     return [{ id: 'ok', label: this.t.ok, primary }];
   }
 
+  // macOS hasn't let her do something yet ('screen': see your screen): what to allow, with a button
+  // to that page of System Settings.
+  permission(page) {
+    const m = this.brain.t.mac;
+    return this.scene(async () => {
+      const id = await this.ask({
+        face: 'aside', line: page === 'screen' ? m.screen : m.access, quote: page === 'screen' ? m.screenHow : m.accessHow,
+        actions: [{ id: 'settings', label: m.settings, primary: true }, ...this.ok(false)],
+      });
+      if (id === 'settings') this.host.openMacSettings(page);
+    });
+  }
+
   // Run a scene: she stays put meanwhile, and stops pointing at the end whatever happened.
   // A new scene ends the one that was on (its panel goes, it returns); only the last one cleans up.
   async scene(play) {

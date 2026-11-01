@@ -100,7 +100,7 @@ export const LINES = {
       showFolder: 'Voir le dossier', shot: 'Capture faite : {name} (dans Images › Screenshots).',
       folderOpened: 'Voilà son dossier : {name}.',
       folders: { explorer: 'L’explorateur', recycle: 'La corbeille', downloads: 'Tes téléchargements', desktop: 'Ton bureau', documents: 'Tes documents', pictures: 'Tes images', music: 'Ta musique', videos: 'Tes vidéos' },
-      media: { pause: 'Pause.', play: 'Ça repart.', next: 'Suivante.', previous: 'Précédente.', volup: 'Plus fort.', voldown: 'Moins fort.', mute: 'J’ai appuyé sur muet.' },
+      media: { pausedAlready: 'C’est déjà en pause.', playingAlready: 'Ça joue déjà.', pause: 'Pause.', play: 'Ça repart.', next: 'Suivante.', previous: 'Précédente.', volup: 'Plus fort.', voldown: 'Moins fort.', mute: 'J’ai appuyé sur muet.' },
     },
     // sa carte de rapport : ce que Claude a abattu aujourd'hui (son menu, ou d'elle-même le soir)
     report: {
@@ -275,7 +275,7 @@ export const LINES = {
       charging: ['Ah, du jus. Merci.', 'Branchée. Je revis.'],
       offline: ['Plus de réseau ! On est coupés du Net.', 'Connexion perdue. Je suis toute seule, là.'],
       online: ['Réseau revenu. Le Net est à nous.', 'Reconnectée.'],
-      usb: ['Une clé USB ({drive}:) ? Je vais voir.', 'Oh, du nouveau ({drive}:). Je jette un œil.'],
+      usb: ['Une clé USB ({drive}) ? Je vais voir.', 'Oh, du nouveau ({drive}). Je jette un œil.'],
       usbBack: ['J’ai fait un tour dans ta clé. Rien de croustillant.', 'Ta clé USB est propre. Enfin, je crois.'],
       usbOut: ['Ta clé est partie. Heureusement que j’étais sortie.'],
       unplugged: ['Sur batterie. J’économise mes éclairs.', 'Débranchée. On fait attention, maintenant.'],
@@ -450,7 +450,7 @@ export const LINES = {
       showFolder: 'Show the folder', shot: 'Screenshot taken: {name} (in Pictures › Screenshots).',
       folderOpened: 'Here’s its folder: {name}.',
       folders: { explorer: 'File Explorer', recycle: 'The recycle bin', downloads: 'Your downloads', desktop: 'Your desktop', documents: 'Your documents', pictures: 'Your pictures', music: 'Your music', videos: 'Your videos' },
-      media: { pause: 'Paused.', play: 'Playing.', next: 'Next one.', previous: 'Previous one.', volup: 'Louder.', voldown: 'Quieter.', mute: 'Hit mute.' },
+      media: { pausedAlready: 'It’s already paused.', playingAlready: 'It’s already playing.', pause: 'Paused.', play: 'Playing.', next: 'Next one.', previous: 'Previous one.', volup: 'Louder.', voldown: 'Quieter.', mute: 'Hit mute.' },
     },
     // her report card: what Claude got through today (her menu, or on her own in the evening)
     report: {
@@ -625,7 +625,7 @@ export const LINES = {
       charging: ['Ah, power. Thanks.', 'Plugged in. I live again.'],
       offline: ['No network! We’re cut off from the Net.', 'Connection lost. It’s just me now.'],
       online: ['Network’s back. The Net is ours.', 'Reconnected.'],
-      usb: ['A USB stick ({drive}:)? Let me see.', 'Ooh, something new ({drive}:). Taking a look.'],
+      usb: ['A USB stick ({drive})? Let me see.', 'Ooh, something new ({drive}). Taking a look.'],
       usbBack: ['Took a stroll through your stick. Nothing juicy.', 'Your USB stick is clean. I think.'],
       usbOut: ['Your stick’s gone. Good thing I got out.'],
       unplugged: ['On battery. Saving my lightning.', 'Unplugged. Careful now.'],
@@ -799,7 +799,7 @@ export const LINES = {
       showFolder: 'Ver la carpeta', shot: 'Captura hecha: {name} (en Imágenes › Screenshots).',
       folderOpened: 'Aquí está su carpeta: {name}.',
       folders: { explorer: 'El explorador', recycle: 'La papelera', downloads: 'Tus descargas', desktop: 'Tu escritorio', documents: 'Tus documentos', pictures: 'Tus imágenes', music: 'Tu música', videos: 'Tus vídeos' },
-      media: { pause: 'Pausa.', play: 'Sigue sonando.', next: 'Siguiente.', previous: 'Anterior.', volup: 'Más alto.', voldown: 'Más bajo.', mute: 'Le di a silenciar.' },
+      media: { pausedAlready: 'Ya está en pausa.', playingAlready: 'Ya está sonando.', pause: 'Pausa.', play: 'Sigue sonando.', next: 'Siguiente.', previous: 'Anterior.', volup: 'Más alto.', voldown: 'Más bajo.', mute: 'Le di a silenciar.' },
     },
     // su informe: lo que Claude sacó hoy (su menú, o ella sola por la tarde)
     report: {
@@ -971,7 +971,7 @@ export const LINES = {
       charging: ['Ah, energía. Gracias.', 'Enchufada. Revivo.'],
       offline: ['¡Sin red! Nos han cortado la Red.', 'Conexión perdida. Estoy sola.'],
       online: ['Volvió la red. La Red es nuestra.', 'Reconectada.'],
-      usb: ['¿Un USB ({drive}:)? Voy a ver.', 'Oh, algo nuevo ({drive}:). Echo un vistazo.'],
+      usb: ['¿Un USB ({drive})? Voy a ver.', 'Oh, algo nuevo ({drive}). Echo un vistazo.'],
       usbBack: ['Me di una vuelta por tu USB. Nada jugoso.', 'Tu USB está limpio. Creo.'],
       usbOut: ['Se fue tu USB. Menos mal que salí.'],
       unplugged: ['Con batería. Ahorro mis rayos.', 'Desenchufada. Cuidado ahora.'],
@@ -1147,7 +1147,7 @@ export const LINES = {
       showFolder: 'Ver a pasta', shot: 'Captura feita: {name} (em Imagens › Screenshots).',
       folderOpened: 'Aqui tá a pasta: {name}.',
       folders: { explorer: 'O explorador de arquivos', recycle: 'A lixeira', downloads: 'Seus downloads', desktop: 'Sua área de trabalho', documents: 'Seus documentos', pictures: 'Suas imagens', music: 'Suas músicas', videos: 'Seus vídeos' },
-      media: { pause: 'Pausado.', play: 'Tocando.', next: 'Próxima.', previous: 'Anterior.', volup: 'Mais alto.', voldown: 'Mais baixo.', mute: 'Apertei o mudo.' },
+      media: { pausedAlready: 'Já está pausado.', playingAlready: 'Já está tocando.', pause: 'Pausado.', play: 'Tocando.', next: 'Próxima.', previous: 'Anterior.', volup: 'Mais alto.', voldown: 'Mais baixo.', mute: 'Apertei o mudo.' },
     },
     // o relatório dela: o que o Claude fez hoje (o menu dela, ou sozinha à noite)
     report: {
@@ -1319,7 +1319,7 @@ export const LINES = {
       charging: ['Ah, energia. Valeu.', 'Na tomada. Revivi.'],
       offline: ['Sem rede! Cortaram a gente da Rede.', 'Conexão perdida. Tô sozinha aqui.'],
       online: ['A rede voltou. A Rede é nossa.', 'Reconectada.'],
-      usb: ['Um pendrive ({drive}:)? Deixa eu ver.', 'Opa, coisa nova ({drive}:). Vou dar uma olhada.'],
+      usb: ['Um pendrive ({drive})? Deixa eu ver.', 'Opa, coisa nova ({drive}). Vou dar uma olhada.'],
       usbBack: ['Dei uma volta no seu pendrive. Nada de interessante.', 'Seu pendrive tá limpo. Acho.'],
       usbOut: ['Seu pendrive foi embora. Ainda bem que eu saí.'],
       unplugged: ['Na bateria. Economizando meus raios.', 'Desligada da tomada. Cuidado agora.'],
@@ -1495,7 +1495,7 @@ export const LINES = {
       showFolder: 'Показать папку', shot: 'Скриншот готов: {name} (в Изображения › Screenshots).',
       folderOpened: 'Вот его папка: {name}.',
       folders: { explorer: 'Проводник', recycle: 'Корзина', downloads: 'Твои загрузки', desktop: 'Твой рабочий стол', documents: 'Твои документы', pictures: 'Твои изображения', music: 'Твоя музыка', videos: 'Твои видео' },
-      media: { pause: 'Пауза.', play: 'Играет.', next: 'Следующий.', previous: 'Предыдущий.', volup: 'Громче.', voldown: 'Тише.', mute: 'Нажала «без звука».' },
+      media: { pausedAlready: 'Уже на паузе.', playingAlready: 'Уже играет.', pause: 'Пауза.', play: 'Играет.', next: 'Следующий.', previous: 'Предыдущий.', volup: 'Громче.', voldown: 'Тише.', mute: 'Нажала «без звука».' },
     },
     // её отчёт: что Claude сделал за день (её меню, или сама вечером)
     report: {
@@ -1669,7 +1669,7 @@ export const LINES = {
       charging: ['О, энергия. Спасибо.', 'Подключена. Я снова живу.'],
       offline: ['Нет сети! Нас отрезали от Сети.', 'Связь потеряна. Я тут совсем одна.'],
       online: ['Сеть вернулась. Сеть наша.', 'Снова на связи.'],
-      usb: ['Флешка ({drive}:)? Сейчас гляну.', 'О, что-то новенькое ({drive}:). Посмотрю.'],
+      usb: ['Флешка ({drive})? Сейчас гляну.', 'О, что-то новенькое ({drive}). Посмотрю.'],
       usbBack: ['Прогулялась по твоей флешке. Ничего интересного.', 'Флешка чистая. Вроде бы.'],
       usbOut: ['Флешку вынули. Хорошо, что я успела выйти.'],
       unplugged: ['На батарее. Берегу свои молнии.', 'Отключили от сети. Теперь осторожнее.'],
@@ -1804,12 +1804,175 @@ const OTHERS = {
     },
   },
 };
+// On a Mac: what differs from Windows (the Dock and the menu bar, Finder, the Trash, the keychain,
+// macOS's settings), laid over the lines above. Every other "PC" becomes "Mac", and Ctrl+Alt+C, ⌃⌥C.
+// `mac`: what she says when macOS hasn't let her do something yet.
+const MAC = {
+  fr: {
+    chat: {
+      stillOpen: '{app} tourne encore : il te demande sûrement d’enregistrer quelque chose.',
+      shot: 'Capture faite : {name} ({where}).',
+      folders: { explorer: 'Le Finder', recycle: 'La corbeille' },
+    },
+    guide: {
+      icon: {
+        line: 'Mon icône, c’est là-haut, dans la barre des menus.',
+        hidden: 'Quand la barre des menus est pleine (ou qu’il y a l’encoche), macOS la cache. Clic droit sur moi : c’est le même menu.',
+      },
+    },
+    setup: {
+      installHow: 'C’est lui qui fait tourner l’IA sur ton Mac. Une ou deux minutes, et il va dans tes Applications.',
+      wakeFailedHow: 'Ouvre-le depuis tes Applications, puis reparle-moi.',
+      pasteHow: 'Je la garde sur ce Mac, dans ton trousseau.',
+    },
+    motion: { line: 'macOS a « Réduire les animations » activé, alors je bouge à peine.' },
+    mac: {
+      screen: 'macOS ne me laisse pas encore voir ton écran.',
+      screenHow: 'Autorise-moi dans Réglages Système › Confidentialité et sécurité › Enregistrement de l’écran et de l’audio du système, puis relance-moi.',
+      access: 'Pour appuyer sur lecture, pause ou suivant, macOS doit me laisser faire.',
+      accessHow: 'Autorise-moi dans Réglages Système › Confidentialité et sécurité › Accessibilité. Le volume, lui, marche déjà.',
+      settings: 'Ouvrir les réglages',
+    },
+  },
+  en: {
+    chat: {
+      stillOpen: '{app} is still running: it’s probably asking you to save something.',
+      shot: 'Screenshot taken: {name} ({where}).',
+      folders: { explorer: 'Finder', recycle: 'The Trash' },
+    },
+    guide: {
+      icon: {
+        line: 'My icon is right up there, in the menu bar.',
+        hidden: 'When the menu bar is full (or there’s a notch), macOS hides it. Right-click me: same menu.',
+      },
+    },
+    setup: {
+      installHow: 'It’s what runs the AI on your Mac. A minute or two, and it goes in your Applications.',
+      wakeFailedHow: 'Open it from your Applications, then talk to me again.',
+      pasteHow: 'I keep it on this Mac, in your keychain.',
+    },
+    motion: { line: 'macOS has Reduce motion on, so I’m barely moving.' },
+    mac: {
+      screen: 'macOS won’t let me see your screen yet.',
+      screenHow: 'Allow me in System Settings › Privacy & Security › Screen & System Audio Recording, then restart me.',
+      access: 'To press play, pause or next for you, macOS has to let me.',
+      accessHow: 'Allow me in System Settings › Privacy & Security › Accessibility. The volume already works.',
+      settings: 'Open Settings',
+    },
+  },
+  es: {
+    chat: {
+      stillOpen: '{app} sigue abierta: seguramente te pide guardar algo.',
+      shot: 'Captura hecha: {name} ({where}).',
+      folders: { explorer: 'El Finder', recycle: 'La papelera' },
+    },
+    guide: {
+      icon: {
+        line: 'Mi icono está ahí arriba, en la barra de menús.',
+        hidden: 'Cuando la barra de menús está llena (o hay muesca), macOS lo esconde. Clic derecho sobre mí: es el mismo menú.',
+      },
+    },
+    setup: {
+      installHow: 'Es lo que hace funcionar la IA en tu Mac. Uno o dos minutos, y va a tus Aplicaciones.',
+      wakeFailedHow: 'Ábrelo desde tus Aplicaciones y vuelve a hablarme.',
+      pasteHow: 'La guardo en este Mac, en tu llavero.',
+    },
+    motion: { line: 'macOS tiene «Reducir movimiento» activado, así que apenas me muevo.' },
+    mac: {
+      screen: 'macOS todavía no me deja ver tu pantalla.',
+      screenHow: 'Dame permiso en Ajustes del Sistema › Privacidad y seguridad › Grabación de pantalla y audio del sistema, y luego reiníciame.',
+      access: 'Para pulsar reproducir, pausa o siguiente, macOS tiene que dejarme.',
+      accessHow: 'Dame permiso en Ajustes del Sistema › Privacidad y seguridad › Accesibilidad. El volumen ya funciona.',
+      settings: 'Abrir Ajustes',
+    },
+  },
+  pt: {
+    chat: {
+      stillOpen: '{app} continua rodando: provavelmente está pedindo para você salvar algo.',
+      shot: 'Captura feita: {name} ({where}).',
+      folders: { explorer: 'O Finder', recycle: 'O Lixo' },
+    },
+    guide: {
+      icon: {
+        line: 'Meu ícone está lá em cima, na barra de menus.',
+        hidden: 'Quando a barra de menus está cheia (ou tem o notch), o macOS esconde ele. Clique direito em mim: é o mesmo menu.',
+      },
+    },
+    setup: {
+      installHow: 'É ele que roda a IA no seu Mac. Um ou dois minutos, e ele vai para os seus Aplicativos.',
+      wakeFailedHow: 'Abra ele pelos seus Aplicativos e fale comigo de novo.',
+      pasteHow: 'Eu guardo ela neste Mac, nas suas Chaves.',
+    },
+    motion: { line: 'O macOS está com “Reduzir movimento” ligado, então eu quase não me mexo.' },
+    mac: {
+      screen: 'O macOS ainda não me deixa ver a sua tela.',
+      screenHow: 'Me autorize em Ajustes do Sistema › Privacidade e Segurança › Gravação de Tela e Áudio do Sistema, depois me reinicie.',
+      access: 'Para apertar play, pausa ou próxima, o macOS precisa deixar.',
+      accessHow: 'Me autorize em Ajustes do Sistema › Privacidade e Segurança › Acessibilidade. O volume já funciona.',
+      settings: 'Abrir Ajustes',
+    },
+  },
+  ru: {
+    chat: {
+      stillOpen: '{app} всё ещё работает: наверное, просит что-то сохранить.',
+      shot: 'Скриншот готов: {name} ({where}).',
+      folders: { explorer: 'Finder', recycle: 'Корзина' },
+    },
+    guide: {
+      icon: {
+        line: 'Мой значок — вон там, наверху, в строке меню.',
+        hidden: 'Когда строка меню переполнена (или мешает вырез экрана), macOS его прячет. Правый клик по мне — то же меню.',
+      },
+    },
+    setup: {
+      installHow: 'Это она запускает ИИ у тебя на Mac. Минута-две, и она будет в «Программах».',
+      wakeFailedHow: 'Открой её из «Программ» и снова заговори со мной.',
+      pasteHow: 'Я храню его на этом Mac, в твоей связке ключей.',
+    },
+    motion: { line: 'В macOS включено «Уменьшение движения», так что я почти не двигаюсь.' },
+    mac: {
+      screen: 'macOS пока не даёт мне видеть твой экран.',
+      screenHow: 'Разреши мне в Системных настройках › Конфиденциальность и безопасность › Запись экрана и системного звука, потом перезапусти меня.',
+      access: 'Чтобы нажимать «играть», «пауза» или «дальше», macOS должна мне разрешить.',
+      accessHow: 'Разреши мне в Системных настройках › Конфиденциальность и безопасность › Универсальный доступ. Громкость уже работает.',
+      settings: 'Открыть настройки',
+    },
+  },
+};
+
+// The system she runs on ('win32', 'darwin'…), told once at start (app.js).
+let platform = 'win32';
+export function setPlatform(value) {
+  platform = value;
+}
+
+function overlay(base, patch) {
+  if (!patch || typeof patch !== 'object' || Array.isArray(patch)) return patch;
+  const out = { ...base };
+  for (const [k, v] of Object.entries(patch)) out[k] = overlay(base?.[k], v);
+  return out;
+}
+
+const forMac = new Map();
+function macLines(lang, base) {
+  if (forMac.has(lang)) return forMac.get(lang);
+  const convert = (value) => {
+    if (typeof value === 'string') return value.replace(/(?<![\p{L}\p{N}])(PC|ПК)(?![\p{L}\p{N}])/gu, 'Mac').replaceAll('Ctrl+Alt+C', '⌃⌥C');
+    if (Array.isArray(value)) return value.map(convert);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, convert(v)]));
+    return value;
+  };
+  const result = overlay(convert(base), MAC[lang] || MAC.en);
+  forMac.set(lang, result);
+  return result;
+}
+
 const converted = new Map();
 export function linesFor(lang, assistant = 'claude') {
-  const base = LINES[lang] || LINES.fr;
+  const base = platform === 'darwin' ? macLines(LINES[lang] ? lang : 'fr', LINES[lang] || LINES.fr) : LINES[lang] || LINES.fr;
   const other = OTHERS[assistant];
   if (!other) return base;
-  const key = `${assistant}:${lang}`;
+  const key = `${assistant}:${lang}:${platform}`;
   if (converted.has(key)) return converted.get(key);
   // French drops the e of "de" and "que" before a vowel: "la fenêtre d'Antigravity"
   const elide = lang === 'fr' && /^[aeiouy]/i.test(other.name);

@@ -11,6 +11,7 @@ const CHARGER_EVERY = 60 * 1000;
 const PLUG_EVERY = 15 * 1000;
 const GAME_AFTER = 6000;  // a game in front this long: you're playing
 const GAME_OVER = 8000;   // and gone this long: you're done
+const RESTOW_AFTER = 15000; // brought out while you play, then left be this long: small again
 
 const PHONE = /phone|iphone|apple|galaxy|samsung|pixel|xiaomi|redmi|poco|oneplus|huawei|honor|motorola|oppo|vivo|realme|nokia|xperia|android|mobile|t[ée]l[ée]phone|celular|телефон/i;
 const PAD = /controller|gamepad|manette|mando|controle|xbox|dualsense|dualshock|joy-?con|геймпад/i;
@@ -42,6 +43,8 @@ export class Pc {
     this.plugs = null; // count of plug events seen (windows.ps1)
     this.plugAt = -Infinity;
     this.game = null;
+    this.gameMode = 'hide'; // her menu › During games: 'hide' (gone until you stop) or 'chip' (small, in her corner)
+    this.away = false;      // gone for a game (her window hidden)
     setInterval(() => this.checkCpu(), 3000);
     setInterval(() => this.checkGame(), 1000);
     this.watchBattery();
@@ -146,7 +149,8 @@ export class Pc {
     if (this.capri.free) this.capri.perform('hop');
   }
 
-  // what windows.ps1 sees: USB sticks by letter, devices plugged in or out, the game in front
+  // what windows.ps1 (or the Mac's helper) sees: USB sticks by letter (by name on a Mac), devices
+  // plugged in or out, the game in front
   onWindows({ usb = [], plug = null, game = null }) {
     if (!this.enabled) {
       this.drives = usb;
@@ -176,7 +180,8 @@ export class Pc {
   // a USB stick: she dives into it to have a look
   async stick(drive) {
     this.capri.wake();
-    this.say(fmt(pick(this.t.usb), { drive }), 'look', 2500);
+    // a drive letter ("E:") on Windows, its name on a Mac
+    this.say(fmt(pick(this.t.usb), { drive: /^[a-z]$/i.test(drive) ? `${drive}:` : drive }), 'look', 2500);
     if (!this.quiet || !(await this.whenFree())) return;
     const { w, h } = this.capri.view;
     if (await this.capri.visit({ x: w - 140, y: h - 6 })) this.say(pick(this.t.usbBack), 'smug', 4500);
@@ -201,24 +206,54 @@ export class Pc {
     const g = this.game;
     if (!g || !this.enabled) return;
     const now = Date.now();
-    // you're playing: a word about it, then she gets out of the way (she's always on top)
+    // you're playing: a word about it, then she gets out of the way (she's always on top): gone
+    // altogether, or small in her corner (her menu › During games)
     if (!g.said && !g.gone && now - g.since >= GAME_AFTER) {
+      if (this.capri.mode === 'alert') return; // Claude needs you: that first, then out of the way
       g.said = true;
-      if (this.capri.stowed || this.capri.mode === 'alert') return;
+      if (this.capri.stowed) return;
       this.capri.wake();
       this.say(fmt(pick(this.t.game), { game: g.name }), 'smug', 3000);
       setTimeout(() => {
         if (this.game !== g || g.gone || this.capri.stowed || this.capri.mode === 'alert') return;
-        g.put = true;
-        this.capri.stow();
+        this.putAway(g);
       }, 2600);
+    }
+    // small in her corner and brought out (a click on her, say) while you still play: back in it once
+    // you leave her be a while (not talking to her, nothing on her panel)
+    if (g.put && !g.gone && this.gameMode === 'chip' && !this.capri.stowed) {
+      const busy = !this.capri.free || this.chat.open || this.guide.running || this.panel.visible || this.capri.mode === 'alert';
+      if (busy || !g.outSince) g.outSince = now;
+      else if (now - g.outSince >= RESTOW_AFTER) {
+        g.outSince = 0;
+        this.capri.stow();
+      }
     }
     // done playing: she comes back, if she's the one who left
     if (g.gone && now - g.gone >= GAME_OVER) {
       this.game = null;
-      if (g.put && this.capri.stowed && this.wantsOut()) {
-        this.capri.unstow().then(() => this.say(pick(this.t.gameBack), 'look', 5000));
-      }
+      if (g.put) this.comeBack(true);
     }
+  }
+
+  // Out of the way for the game: into her biochip, and her window gone too if that's what you picked.
+  async putAway(g) {
+    g.put = true;
+    await this.capri.stow();
+    if (this.gameMode !== 'hide' || this.game !== g || g.gone) return;
+    this.away = true;
+    this.host.setAway(true);
+  }
+
+  // Back from a game (or called back with Ctrl+Alt+C, her menu): her window, then her, and `ask`
+  // whether you won.
+  async comeBack(ask = false) {
+    if (this.away) {
+      this.away = false;
+      this.host.setAway(false);
+    }
+    if (!this.capri.stowed || !this.wantsOut()) return;
+    await this.capri.unstow();
+    if (ask) this.say(pick(this.t.gameBack), 'look', 5000);
   }
 }

@@ -13,7 +13,7 @@ import { Bond, Jealousy } from './bond.js';
 import { Reminders, clock } from './reminders.js';
 import { Look } from './look.js';
 import { Pc } from './pc.js';
-import { linesFor } from './lines.js';
+import { linesFor, setPlatform } from './lines.js';
 import { pick, fmt, reducedMotion } from './util.js';
 
 const host = window.host;
@@ -51,6 +51,7 @@ async function boot() {
     document.fonts.load('400 11px "JetBrains Mono"'),
   ]);
   document.documentElement.lang = config.lang;
+  setPlatform(config.platform); // her words for Windows or for a Mac
   // her animations: like Windows, full or reduced (her menu)
   const applyMotion = (setting) => {
     reducedMotion.setting = setting || 'auto';
@@ -91,6 +92,7 @@ async function boot() {
   capri.wander = config.wander;
   capri.possessWindows = config.possess;
   capri.restOn = config.rest || 'corner';
+  capri.platform = config.platform;
   capri.setView(innerWidth, innerHeight, innerHeight - floorGap);
   capri.setScale(config.scale);
 
@@ -146,6 +148,8 @@ async function boot() {
     refreshHit();
     hoverChip();
   });
+  // a click on her done (a Mac brought her app forward with it: main.js gives it back)
+  window.addEventListener('mouseup', (e) => e.button === 0 && host.released());
   document.addEventListener('mouseleave', () => {
     mouse = null;
     refreshHit();
@@ -254,6 +258,8 @@ async function boot() {
   // your PC as she feels it (pc.js): the processor, the battery, the network, a USB stick, a game
   const pc = new Pc({ capri, panel, brain, host, voice, chat, guide });
   pc.enabled = config.pcReact !== false;
+  pc.gameMode = config.gameMode || 'hide';
+  chat.musicApp = config.musicApp || 'youtube';
   let wantsOut = config.visible !== false; // not put away in your settings (Ctrl+Alt+C, her menu)
   pc.wantsOut = () => wantsOut;
 
@@ -597,6 +603,8 @@ async function boot() {
     followOn = cfg.follow !== false;
     look.configure(cfg);
     pc.enabled = cfg.pcReact !== false;
+    pc.gameMode = cfg.gameMode || 'hide';
+    chat.musicApp = cfg.musicApp || 'youtube';
     wantsOut = cfg.visible !== false;
     reminders.sync(cfg.reminders); // one may have been cancelled from her menu
     capri.wander = cfg.wander;
@@ -668,6 +676,9 @@ async function boot() {
       case 'bond': // --dev: sync points from a source (as if earned)
         bond.add(cmd.source || 'chat', cmd.n || 1);
         break;
+      case 'space': // macOS: another desktop (Space); her window comes over and she teleports in
+        capri.cross();
+        break;
       case 'rearmed': // a new mouse hook (main.js): click-through until the pointer comes over her again
         mouse = null;
         refreshHit();
@@ -720,8 +731,9 @@ async function boot() {
         else if (cmd.topic === 'menu') guide.menu();
         else if (typeof guide[cmd.topic] === 'function') guide.scene(() => guide[cmd.topic]());
         break;
-      case 'stow': // Ctrl+Alt+C: into her biochip, or back out
+      case 'stow': // Ctrl+Alt+C: into her biochip, or back out (gone for a game: her window too)
         if (cmd.on) capri.stow();
+        else if (pc.away) pc.comeBack();
         else capri.unstow();
         break;
       case 'satellite': // the whole sequence, on demand (tray)
