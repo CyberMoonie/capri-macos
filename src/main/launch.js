@@ -1,8 +1,8 @@
 'use strict';
 
 // Opening things when you ask her to (chat.js): an app from the Start menu (Store apps like Spotify
-// included), a Steam or Epic game, your music (the media keys: pause, next…, so it works with
-// Spotify and most players), a Spotify search, or a website. Windows only.
+// included) or, on a Mac, from Applications, a Steam or Epic game, your music (the media keys: pause,
+// next…, so it works with Spotify and most players), a Spotify search, or a website.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -10,8 +10,10 @@ const { spawn, execFile } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { app, shell } = require('electron');
 const { powershell } = require('./apps');
+const mac = require('./mac');
 
 const WIN = process.platform === 'win32';
+const MAC = process.platform === 'darwin';
 // not things to open from a chat: uninstallers, help pages and the like
 const SKIP = /uninstall|désinstaller|desinstalar|deinstall|readme|documentation|release notes|support center|website|manual/i;
 const STEAM_SKIP = /redistributable|dedicated server|steamworks/i;
@@ -27,7 +29,7 @@ const words = (text) => plain(text).split(/[^\p{L}\p{N}]+/u).filter((w) => w.len
 // Everything she can open: [{ name, kind: 'app' | 'steam' | 'epic', id }]
 async function launchables() {
   if (cache && Date.now() - cache.at < CACHE_MS) return cache.items;
-  if (!WIN) return [];
+  if (!WIN && !MAC) return [];
   const items = [];
   const seen = new Set();
   const add = (item) => {
@@ -38,6 +40,16 @@ async function launchables() {
   };
   // games first: a game's own entry wins over a shortcut to it
   for (const game of [...steamGames(await steamRoot()), ...epicGames()]) add(game);
+  if (MAC) {
+    // the apps in Applications, by the name Finder shows (in your language) and by their file's
+    const apps = await mac.helperJson(['installed']).catch(() => null);
+    for (const { name, file, path: id } of apps || []) {
+      add({ name, kind: 'app', id });
+      if (file && file !== name) add({ name: file, kind: 'app', id });
+    }
+    if (apps) cache = { at: Date.now(), items };
+    return items;
+  }
   // the Start menu's list is slow the first time (PowerShell starting cold): main.js asks for it early
   const out = await powershell('Get-StartApps | Select-Object Name, AppID | ConvertTo-Json -Compress', 45000).catch(() => null);
   for (const { Name, AppID } of [].concat(out ? JSON.parse(out) : [])) {
@@ -48,6 +60,10 @@ async function launchables() {
 }
 
 function steamRoot() {
+  if (MAC) {
+    const root = path.join(app.getPath('home'), 'Library', 'Application Support', 'Steam');
+    return Promise.resolve(fs.existsSync(root) ? root : null);
+  }
   return new Promise((resolve) => {
     execFile('reg.exe', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath'], { windowsHide: true, timeout: 5000 }, (err, out) => {
       const found = !err && /SteamPath\s+REG_SZ\s+(.+)/.exec(String(out))?.[1].trim();
@@ -90,7 +106,9 @@ function steamGames(root) {
 
 // Epic's games, from its launcher's manifests (not the Unreal Engine plugins it also keeps there)
 function epicGames() {
-  const dir = path.join(process.env.ProgramData || 'C:\\ProgramData', 'Epic', 'EpicGamesLauncher', 'Data', 'Manifests');
+  const dir = MAC
+    ? path.join(app.getPath('home'), 'Library', 'Application Support', 'Epic', 'EpicGamesLauncher', 'Data', 'Manifests')
+    : path.join(process.env.ProgramData || 'C:\\ProgramData', 'Epic', 'EpicGamesLauncher', 'Data', 'Manifests');
   let files = [];
   try {
     files = fs.readdirSync(dir).filter((f) => f.endsWith('.item'));
@@ -130,9 +148,10 @@ function match(items, text) {
   return best?.item || null;
 }
 
-// What's on your desktop (yours and the shared one): files, folders and shortcuts, by name.
+// What's on your desktop (yours and, on Windows, the shared one): files, folders and shortcuts, by
+// name. A Mac app (.app) is a folder, but opening it runs it: it counts as a file, behind a button.
 function desktopItems() {
-  const dirs = [app.getPath('desktop'), path.join(process.env.PUBLIC || 'C:\\Users\\Public', 'Desktop')];
+  const dirs = [app.getPath('desktop'), ...(WIN ? [path.join(process.env.PUBLIC || 'C:\\Users\\Public', 'Desktop')] : [])];
   const items = [];
   for (const dir of dirs) {
     let entries = [];
@@ -143,20 +162,21 @@ function desktopItems() {
     }
     for (const e of entries) {
       if (e.name.startsWith('.') || /^desktop\.ini$/i.test(e.name)) continue;
-      const folder = e.isDirectory();
+      const folder = e.isDirectory() && !APP_BUNDLE.test(e.name);
       items.push({ name: folder ? e.name : e.name.replace(/\.[^.]+$/, ''), kind: folder ? 'folder' : 'file', id: path.join(dir, e.name) });
     }
   }
   return items;
 }
 
-// files that run something: never opened without a click, even named by you
-const RUNS = /\.(exe|bat|cmd|ps1|vbs|vbe|js|jse|wsf|wsh|msi|msp|reg|scr|com|jar|hta|cpl|pif)$/i;
+// files that run something: never opened without a click, even named by you (Windows', then the Mac's)
+const RUNS = /\.(exe|bat|cmd|ps1|vbs|vbe|js|jse|wsf|wsh|msi|msp|reg|scr|com|jar|hta|cpl|pif|app|command|tool|sh|zsh|bash|csh|pkg|mpkg|dmg|scpt|scptd|applescript|workflow|terminal|action|prefpane|saver|osax|kext)$/i;
+const APP_BUNDLE = /\.app$/i;
 const risky = (item) => item?.kind === 'file' && RUNS.test(item.id);
 
 // Folders asked for by what they are ("ouvre mes téléchargements", "open the file explorer").
 const FOLDERS = [
-  ['explorer', /explorateur|file explorer|\bexplorer\b|ce pc|this pc|explorador|проводник/i],
+  ['explorer', /explorateur|file explorer|\bexplorer\b|ce pc|this pc|explorador|проводник|\bfinder\b/i],
   ['recycle', /corbeille|recycle bin|\btrash\b|papelera|lixeira|корзин/i],
   ['downloads', /t[ée]l[ée]chargements?|downloads?|descargas|transfer[êe]ncias|загрузк/i],
   ['desktop', /\bbureau\b|\bdesktop\b|escritorio|[áa]rea de trabalho|рабоч\S* стол/i],
@@ -172,6 +192,9 @@ function knownFolder(text) {
 }
 
 function openKnown(id) {
+  // a Mac: a Finder window on your home folder, or the Trash
+  if (MAC && id === 'explorer') return shell.openPath(app.getPath('home'));
+  if (MAC && id === 'recycle') return shell.openPath(path.join(app.getPath('home'), '.Trash'));
   if (id === 'explorer') return spawn('explorer.exe', [], { detached: true, stdio: 'ignore' }).on('error', () => {}).unref();
   if (id === 'recycle') return spawn('explorer.exe', ['shell:RecycleBinFolder'], { detached: true, stdio: 'ignore' }).on('error', () => {}).unref();
   return shell.openPath(app.getPath(id));
@@ -201,6 +224,11 @@ async function launch({ kind, id } = {}) {
   if (!item) throw new Error('not found');
   if (kind === 'steam') return shell.openExternal(`steam://rungameid/${id}`);
   if (kind === 'epic') return shell.openExternal(`com.epicgames.launcher://apps/${encodeURIComponent(id)}?action=launch&silent=true`);
+  if (MAC) {
+    const err = await shell.openPath(id); // the app's own folder in Applications
+    if (err) throw new Error(err);
+    return undefined;
+  }
   spawn('explorer.exe', [`shell:AppsFolder\\${id}`], { detached: true, stdio: 'ignore' }).on('error', () => {}).unref();
   return undefined;
 }
@@ -212,7 +240,61 @@ const MEDIA = { pause: [0xb3, 1], play: [0xb3, 1], next: [0xb0, 1], previous: [0
 const KEY_DOWN = 1; // KEYEVENTF_EXTENDEDKEY
 const KEY_UP = 3;   // ...and KEYEVENTF_KEYUP
 
+// On a Mac, the keys need Privacy & Security › Accessibility: until you allow her, the volume still
+// moves (the way the Sound menu does it), and the rest says what it needs: { need: 'accessibility' }.
+const MAC_VOLUME = {
+  volup: 'set volume output volume ((output volume of (get volume settings)) + 10)',
+  voldown: 'set volume output volume ((output volume of (get volume settings)) - 10)',
+  mute: 'set volume output muted (not (output muted of (get volume settings)))',
+};
+
+// Spotify and Apple Music, told directly (AppleScript): no Accessibility needed (macOS asks you once
+// whether Capri may control each), and she knows whether it's playing. The one playing, else the one
+// open. { name, bundle, state: 'playing' | 'paused' | 'stopped' } or null.
+const PLAYERS = [['Spotify', 'com.spotify.client'], ['Music', 'com.apple.Music']];
+const { osa } = mac;
+const SAYS = { pause: 'pause', play: 'play', next: 'next track', previous: 'previous track' };
+
+async function macPlayer() {
+  const open = (await mac.helperJson(['apps']).catch(() => [])).map((a) => a.bundle);
+  const found = [];
+  for (const [name, bundle] of PLAYERS) {
+    if (!open.includes(bundle)) continue;
+    const state = await osa(`tell application id "${bundle}" to player state as text`);
+    if (state) found.push({ name, bundle, state });
+  }
+  return found.find((p) => p.state === 'playing') || found[0] || null;
+}
+
+// Nothing open to play: Spotify if it's installed (it picks up where you left it), else Apple Music.
+async function anyPlayer() {
+  const spotify = (await launchables()).some((i) => i.kind === 'app' && /\/Spotify\.app$/i.test(i.id));
+  return spotify ? PLAYERS[0] : PLAYERS[1];
+}
+
+async function macMedia(action) {
+  if (SAYS[action]) {
+    const player = await macPlayer();
+    if (player) {
+      // said twice: "pause" doesn't start it again, and "play" doesn't stop it
+      if (action === 'pause' && player.state !== 'playing') return { already: 'paused' };
+      if (action === 'play' && player.state === 'playing') return { already: 'playing' };
+      if ((await osa(`tell application id "${player.bundle}" to ${SAYS[action]}`)) !== null) return true;
+    } else if (action === 'play') {
+      const [, bundle] = await anyPlayer();
+      if ((await osa(`tell application id "${bundle}" to play`)) !== null) return true;
+    }
+  }
+  const res = await mac.helperJson(['media', action]).catch(() => ({ ok: false }));
+  if (res.ok || res.need !== 'accessibility') return Boolean(res.ok);
+  if (!MAC_VOLUME[action]) return { need: 'accessibility' };
+  return new Promise((resolve) => {
+    execFile('osascript', ['-e', MAC_VOLUME[action]], { timeout: 5000 }, (err) => resolve(!err));
+  });
+}
+
 async function media(action) {
+  if (MAC && MEDIA[action]) return macMedia(action);
   if (!WIN || !MEDIA[action]) return false;
   const [key, times] = MEDIA[action];
   return powershell(
@@ -222,9 +304,62 @@ async function media(action) {
 }
 
 // A Spotify search for it: in the app if it's installed, else on the web.
+// A song on Spotify by its name, played right away on a Mac: its track found with a web search (no
+// Spotify account needed; DuckDuckGo, else Brave if that one says no), checked by its title, then
+// played by the Spotify app. { title } or null.
+const TRACK_SEARCH = [
+  (q) => `https://html.duckduckgo.com/html/?q=${encodeURIComponent(`${q} spotify track`)}`,
+  (q) => `https://search.brave.com/search?q=${encodeURIComponent(`${q} spotify track`)}`,
+];
+
+async function trackIds(q) {
+  for (const url of TRACK_SEARCH) {
+    try {
+      const res = await fetch(url(q), { headers: { 'user-agent': UA, 'accept-language': 'en' }, signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const ids = [...new Set([...(await res.text()).matchAll(/open\.spotify\.com(?:\/|%2F)(?:intl-[a-z]+(?:\/|%2F))?track(?:\/|%2F)([A-Za-z0-9]{22})/g)].map((m) => m[1]))];
+      if (ids.length) return ids.slice(0, 5);
+    } catch {
+      // that one's down or slow: the next
+    }
+  }
+  return [];
+}
+
+async function spotifyTrack(q) {
+  try {
+    const ids = await trackIds(q);
+    const wanted = words(q);
+    let best = null;
+    for (const id of ids) {
+      const info = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${id}`, { signal: AbortSignal.timeout(5000) })
+        .then((r) => r.json()).catch(() => null);
+      if (!info?.title) continue;
+      const hits = words(info.title).filter((w) => wanted.includes(w)).length;
+      if (!best || hits > best.hits) best = { id, title: info.title, hits };
+    }
+    if (!best?.hits) {
+      console.error('[capri] spotify: no track found for', JSON.stringify(q));
+      return null;
+    }
+    if ((await osa(`tell application id "com.spotify.client" to play track "spotify:track:${best.id}"`)) === null) {
+      console.error('[capri] spotify: the Spotify app would not play it (is Capri allowed to control Spotify?)');
+      return null;
+    }
+    return { title: best.title };
+  } catch {
+    return null;
+  }
+}
+
 async function music(query) {
-  const q = String(query || '').trim().slice(0, 200);
+  // as her AI writes it ('Blade Runner 2049 - "Common Ground" by Hans Zimmer'): plain words to search
+  const q = String(query || '').replace(/["“”«»]/g, ' ').replace(/\s+by\s+/i, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
   if (!q) return false;
+  if (MAC && (await anyPlayer())[0] === 'Spotify') {
+    const played = await spotifyTrack(q);
+    if (played) return played;
+  }
   try {
     await shell.openExternal(`spotify:search:${encodeURIComponent(q)}`);
   } catch {

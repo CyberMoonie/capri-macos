@@ -10,6 +10,7 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { spawn, execFile } = require('node:child_process');
 const ollama = require('./ollama');
+const { pathReady } = require('./mac');
 
 const PROVIDERS = {
   ollama: { label: 'Ollama (local)', kind: 'ollama', local: true },
@@ -129,7 +130,8 @@ const quote = (s) => (process.platform === 'win32' ? `"${s}"` : s); // cmd joins
 let claudeSession = null;
 let claudeStarted = false; // each message after the first continues the same conversation
 
-function claudeVersion() {
+async function claudeVersion() {
+  await pathReady(); // on a Mac started from Finder, `claude` is on the PATH your shell gives
   return new Promise((resolve, reject) => {
     execFile('claude', ['--version'], { shell: process.platform === 'win32', timeout: 10000 }, (err, out) => (
       err ? reject(new Error('Claude Code not found (is `claude` on your PATH?)')) : resolve(out.trim())));
@@ -209,6 +211,7 @@ const isChatSession = (id) => Boolean(id) && id === claudeSession;
 
 async function chat(id, cfg, { model, messages }, onDelta, signal) {
   const p = endpoint(id, cfg);
+  if (p.kind === 'claude') await pathReady();
   if (p.kind === 'ollama') return ollama.chat({ model, messages }, onDelta, signal);
   // Claude Code keeps its own memory of the conversation: only her persona and your last message go
   if (p.kind === 'claude') return claudeChat(cfg, messages.at(-1).content, messages[0].content, onDelta, signal);

@@ -2,15 +2,17 @@
 
 // Closing an app when you ask her to (chat.js), after you've confirmed with a click. The apps with
 // a window, by name; closing one the way its own close button does (it can still ask you to save),
-// and only if you ask again, forcing it. Windows only.
+// and only if you ask again, forcing it. On a Mac: the apps in the Dock, closed like Cmd+Q.
 
 const { execFile } = require('node:child_process');
+const mac = require('./mac');
 
 // never these: the desktop itself, Windows' own pieces, her (Capri), Claude (she watches it) and
 // Ollama (she talks through it)
 const KEEP = new Set([
   'explorer', 'applicationframehost', 'textinputhost', 'shellexperiencehost', 'startmenuexperiencehost',
   'searchhost', 'searchapp', 'lockapp', 'dwm', 'capri', 'electron', 'claude', 'codex', 'ollama', 'ollama app',
+  'finder', // the Mac's own
 ]);
 
 function powershell(script, timeout = 15000) {
@@ -24,6 +26,7 @@ function powershell(script, timeout = 15000) {
 
 // [{ name, process, ids }]: one per program with a window open ("AM Music", "Discord"...)
 async function list() {
+  if (mac.MAC) return macList();
   if (process.platform !== 'win32') return [];
   const out = await powershell(
     'Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle } | '
@@ -36,6 +39,19 @@ async function list() {
     if (id === process.pid || KEEP.has(name.toLowerCase())) continue;
     const app = apps.get(name) || { name, process: name, label: label || '', ids: [] };
     app.ids.push(id);
+    apps.set(name, app);
+  }
+  return [...apps.values()];
+}
+
+// The apps in the Dock (not the background helpers), by the name macOS shows.
+async function macList() {
+  const rows = await mac.helperJson(['apps']);
+  const apps = new Map();
+  for (const { pid, name } of rows) {
+    if (!name || pid === process.pid || KEEP.has(name.toLowerCase())) continue;
+    const app = apps.get(name) || { name, process: name, label: name, ids: [] };
+    app.ids.push(pid);
     apps.set(name, app);
   }
   return [...apps.values()];
@@ -64,6 +80,10 @@ async function find(wanted) {
 async function close(name, { force = false } = {}) {
   const app = (await list()).find((a) => a.process === name);
   if (!app) return { running: false };
+  if (mac.MAC) {
+    const left = await mac.helper(['quit', ...(force ? ['--force'] : []), ...app.ids.map(String)], 15000);
+    return { running: Number(left) > 0 };
+  }
   const ids = app.ids.join(',');
   const out = await powershell(force
     ? `Stop-Process -Id ${ids} -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 600; `

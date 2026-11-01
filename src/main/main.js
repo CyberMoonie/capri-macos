@@ -6,14 +6,16 @@ const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 const {
   app, BrowserWindow, Tray, Menu, ipcMain, screen, protocol, net, shell, globalShortcut, nativeImage,
-  clipboard, ClipboardItem, dialog, powerMonitor, desktopCapturer,
+  clipboard, ClipboardItem, dialog, powerMonitor, desktopCapturer, systemPreferences,
 } = require('electron');
 const { randomUUID } = require('node:crypto');
 
 const config = require('./config');
 const { TRAY, LANGS } = require('./labels');
 const { createBridge } = require('./bridge');
-const { startWindowWatch } = require('./windows');
+const { startWindowWatch, aisIn, aisAt } = require('./windows');
+const { overlayArea: areaOn } = require('./area');
+const mac = require('./mac');
 const llm = require('./llm');
 const ollama = require('./ollama');
 const setup = require('./setup');
@@ -29,6 +31,10 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.CAPRI_PORT) || 47823;
 const SOUND_EXT = /\.(mp3|wav|ogg|m4a)$/i;
+const MAC = process.platform === 'darwin';
+// Her window's place among the others. On a Mac, under the Dock and the menu bar (they come up over
+// her legs, like the taskbar on Windows, and stay clickable), over every app's windows.
+const LEVEL = MAC ? 'modal-panel' : 'screen-saver';
 
 const OLLAMA_SITE = 'https://ollama.com';
 
@@ -126,14 +132,9 @@ function moveOverlay(id) {
   return area;
 }
 
-// Her window: the work area, or the whole screen while she rests on the taskbar (her legs hang
-// over it), less its top row of pixels: a window on top covering the whole screen is a fullscreen
-// app to Windows (animated wallpapers pause, notifications wait). `gap`: how much of her window is
-// below the top of the taskbar (0, or its height).
+// Her window on her screen, and how much of it is below the taskbar or the Dock (area.js).
 function overlayArea() {
-  const { workArea, bounds } = targetDisplay();
-  const area = config.load().rest === 'taskbar' ? { ...bounds, y: bounds.y + 1, height: bounds.height - 1 } : workArea;
-  return { area, gap: area.y + area.height - (workArea.y + workArea.height) };
+  return areaOn(targetDisplay(), config.load().rest);
 }
 
 function fitOverlay() {
@@ -150,7 +151,7 @@ function rearmOverlay() {
   if (!overlay || overlay.isDestroyed()) return;
   overlay.setIgnoreMouseEvents(false);
   overlay.setIgnoreMouseEvents(true, { forward: true });
-  overlay.setAlwaysOnTop(true, 'screen-saver');
+  overlay.setAlwaysOnTop(true, LEVEL);
   fitOverlay();
   sendCommand('rearmed'); // click-through again: she waits for the pointer to be on her
   console.log('[capri] mouse hook set up again');
@@ -162,7 +163,7 @@ function raiseOverlay() {
   for (const wait of [0, 400]) {
     setTimeout(() => {
       if (!overlay || overlay.isDestroyed()) return;
-      overlay.setAlwaysOnTop(true, 'screen-saver');
+      overlay.setAlwaysOnTop(true, LEVEL);
       overlay.moveTop();
     }, wait);
   }
@@ -183,7 +184,10 @@ function createOverlay() {
     focusable: false,
     hasShadow: false,
     alwaysOnTop: true,
+    // (not a panel on a Mac: Electron keeps those on every desktop, and she has to stay on the one you
+    // leave, then follow you)
     type: process.platform === 'win32' ? 'toolbar' : undefined,
+    acceptFirstMouse: true, // a Mac: your first click on her is hers, not just bringing her app forward
     show: false,
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload.js'),
@@ -195,7 +199,7 @@ function createOverlay() {
     },
   });
 
-  overlay.setAlwaysOnTop(true, 'screen-saver');
+  overlay.setAlwaysOnTop(true, LEVEL);
   overlay.setIgnoreMouseEvents(true, { forward: true });
   overlay.loadURL('capri://app/src/renderer/index.html');
   // always shown: put away, she's still there as her biochip in the corner. Sized again first:
@@ -203,6 +207,13 @@ function createOverlay() {
   overlay.once('ready-to-show', () => {
     fitOverlay();
     overlay.showInactive();
+    // on a Mac, on the desktop (Space) you're on only, and allowed over full-screen apps: when you go
+    // to another one, she stays on this one and then follows you there (followSpace). Set once she's
+    // shown: showing a panel puts it on every desktop.
+    if (MAC) {
+      overlay.setVisibleOnAllWorkspaces(false, { visibleOnFullScreen: true, skipTransformProcessType: true });
+      overlay.setHiddenInMissionControl(true); // she isn't one of your windows
+    }
   });
   overlay.webContents.on('render-process-gone', (_e, details) => {
     console.error('[capri] renderer gone:', details.reason);
@@ -218,6 +229,110 @@ function createOverlay() {
 
 function sendCommand(name, payload = {}) {
   overlay?.webContents.send('capri:command', { name, ...payload });
+}
+
+// macOS: you swiped to another desktop (Space) or a full-screen app. Her window stayed on the one you
+// left (she slid away with it); she goes out of sight, her window comes over to this one, and she
+// arrives in a teleport. If this Mac won't bring her window over, she stays on every desktop instead.
+let space = null; // { seen, everywhere, move }
+function followSpace(data) {
+  if (!MAC || !overlay || overlay.isDestroyed()) return;
+  if (!space) space = { seen: data.space, everywhere: false, move: null };
+  if (data.space === space.seen || space.everywhere) {
+    space.seen = data.space;
+    return;
+  }
+  space.seen = data.space;
+  const move = (space.move = Symbol('move')); // a newer switch cancels what's left of this one
+  const current = () => space.move === move && !overlay.isDestroyed();
+  sendCommand('space'); // out of sight first
+  const all = (on) => overlay.setVisibleOnAllWorkspaces(on, { visibleOnFullScreen: true, skipTransformProcessType: true });
+  const bring = (then) => setTimeout(() => {
+    if (!current()) return;
+    all(true); // on every desktop a moment, this one included…
+    setTimeout(() => {
+      if (!current()) return;
+      all(false); // …then on this one only
+      overlay.setHiddenInMissionControl(true);
+      then?.();
+    }, 250);
+  }, 60);
+  const here = () => lastWindows?.here !== false;
+  bring();
+  // still not on screen here a moment later (her helper says): once more, then on every desktop
+  setTimeout(() => {
+    if (!current() || here() || away) return; // hidden for a game: of course she isn't on screen
+    bring(() => setTimeout(() => {
+      if (!current() || here() || away) return;
+      space.everywhere = true;
+      all(true);
+      overlay.setHiddenInMissionControl(true);
+      sendCommand('space');
+      console.log('[capri] her window would not follow you across desktops: she stays on all of them');
+    }, 1200));
+  }, 1500);
+}
+
+// macOS: the app you're in (not her). Clicking her or typing to her brings her app forward; once
+// that's done (and you aren't typing to her), that app is put back in front, keyboard and all.
+let typing = false;
+let otherApp = null; // its pid
+let away = false; // her window hidden for a game (pc.js)
+function handBack() {
+  if (!MAC) return;
+  // a beat later: the click may have opened her chat, which keeps the keyboard
+  setTimeout(() => {
+    if (!typing && otherApp) mac.helper(['activate', String(otherApp)]).catch(() => {});
+  }, 150);
+}
+
+// macOS: when her helper may not read window titles (Screen Recording is given to her app, and not
+// always passed on to it), her app reads the title of the window in front itself, once each time it
+// changes, only to spot another AI in it (her jealousy): never kept, never sent.
+let titled = { fg: null, ai: [] };
+function titleAis(data) {
+  if (!MAC || data.titles || !(data.fg > 0) || systemPreferences.getMediaAccessStatus('screen') !== 'granted') return [];
+  if (titled.fg === data.fg) return titled.ai;
+  const { fg } = data;
+  titled = { fg, ai: [] };
+  desktopCapturer.getSources({ types: ['window'], thumbnailSize: { width: 0, height: 0 }, fetchWindowIcons: false }).then((sources) => {
+    if (titled.fg !== fg) return;
+    titled.ai = aisIn(sources.find((s) => s.id.startsWith(`window:${fg}:`))?.name);
+    if (!titled.ai.length || lastWindows?.fg !== fg) return;
+    lastWindows = { ...lastWindows, ai: [...new Set([...lastWindows.ai, ...titled.ai])] };
+    overlay?.webContents.send('windows:update', lastWindows);
+  }).catch(() => {});
+  return [];
+}
+
+// macOS: the address of the tab in front, while a browser is in front and she's jealous of other AIs:
+// a ChatGPT conversation's title is just its name, its address says chatgpt.com. Asked of the browser
+// itself every few seconds (AppleScript: macOS asks you once whether Capri may), only matched against
+// the AIs' sites, never kept.
+const BROWSERS = {
+  'com.apple.Safari': 'URL of current tab of front window',
+  'com.apple.SafariTechnologyPreview': 'URL of current tab of front window',
+  'com.google.Chrome': 'URL of active tab of front window',
+  'com.google.Chrome.canary': 'URL of active tab of front window',
+  'com.brave.Browser': 'URL of active tab of front window',
+  'com.microsoft.edgemac': 'URL of active tab of front window',
+  'company.thebrowser.Browser': 'URL of active tab of front window',
+  'com.vivaldi.Vivaldi': 'URL of active tab of front window',
+  'com.operasoftware.Opera': 'URL of active tab of front window',
+};
+let tab = { fg: null, ai: [] }; // the AIs at the front tab's address, for that window
+let seenAi = []; // the AIs the window in front was spotted as, before its tab's address
+const withTab = (ai) => [...new Set([...ai, ...tab.ai])];
+async function checkTab() {
+  const w = lastWindows;
+  const script = MAC && w && config.load().jealous !== false && BROWSERS[w.app];
+  const ai = script ? aisAt(await mac.osa(`tell application id "${w.app}" to get ${script}`, 3000)) : [];
+  if (lastWindows !== w && lastWindows?.fg !== w?.fg) return; // you've moved on meanwhile
+  const changed = tab.fg !== w?.fg || tab.ai.join() !== ai.join();
+  tab = { fg: w?.fg ?? null, ai };
+  if (!changed || !lastWindows) return;
+  lastWindows = { ...lastWindows, ai: withTab(seenAi) };
+  overlay?.webContents.send('windows:update', lastWindows);
 }
 
 // Ctrl+Alt+C: she folds herself away into her biochip in the corner, or comes back out of it.
@@ -243,19 +358,20 @@ function playDemo() {
   next();
 }
 
-// During the demo, a little fake terminal for her to sit on and take over (window tracking is
-// Windows only, so only there). Opened without stealing focus; closing it drops her off it.
+// During the demo, a little fake terminal for her to sit on and take over (where she sees your
+// windows: Windows and macOS). Opened without stealing focus; closing it drops her off it.
 let demoWin = null;
-const DEMO_TERMINAL = `<body style="margin:0;background:#14101c;color:#8f8aa3;font:13px/1.7 Consolas,monospace;padding:14px 18px">
-<div style="color:#36ff7a">PS C:\\night-city-api&gt; npm test -- gigs</div>
+const PROMPT = MAC ? '~/night-city-api %' : 'PS C:\\night-city-api&gt;';
+const DEMO_TERMINAL = `<body style="margin:0;background:#14101c;color:#8f8aa3;font:13px/1.7 ${MAC ? 'Menlo' : 'Consolas'},monospace;padding:14px 18px">
+<div style="color:#36ff7a">${PROMPT} npm test -- gigs</div>
 <div>&nbsp;&nbsp;GET /gigs</div><div style="color:#36ff7a">&nbsp;&nbsp;&nbsp;&nbsp;✓ returns 20 items per page</div>
 <div style="color:#36ff7a">&nbsp;&nbsp;&nbsp;&nbsp;✓ paginates with a cursor</div><div style="color:#36ff7a">&nbsp;&nbsp;&nbsp;&nbsp;✓ rejects a bad cursor</div>
-<div>&nbsp;&nbsp;6 passing (212ms)</div><div style="color:#36ff7a">PS C:\\night-city-api&gt; _</div></body>`;
+<div>&nbsp;&nbsp;6 passing (212ms)</div><div style="color:#36ff7a">${PROMPT} _</div></body>`;
 
 function demoWindow(open) {
   demoWin?.destroy();
   demoWin = null;
-  if (!open || process.platform !== 'win32') return false;
+  if (!open || !(process.platform === 'win32' || mac.available())) return false;
   const b = overlay.getBounds();
   demoWin = new BrowserWindow({
     x: Math.round(b.x + b.width * 0.5 - 310), y: Math.round(b.y + b.height * 0.42), width: 620, height: 300,
@@ -281,7 +397,7 @@ function resolveLang(setting) {
 // What the overlay gets: `lang` is the resolved one, `langSetting` what the user picked.
 function rendererConfig() {
   const { apiKeys, ...cfg } = config.load(); // the keys stay here: the overlay only learns which ones are set
-  return { ...cfg, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(cfg.lang), langSetting: cfg.lang, floorGap: overlayArea().gap };
+  return { ...cfg, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(cfg.lang), langSetting: cfg.lang, floorGap: overlayArea().gap, platform: process.platform };
 }
 
 function updateConfig(patch) {
@@ -301,7 +417,8 @@ function rebuildTray() {
   const cfg = config.load();
   const hookState = activeHooks().status();
   const watched = activeAssistant();
-  const t = Object.fromEntries(Object.entries(TRAY[resolveLang(cfg.lang)]).map(([key, value]) =>
+  const labels = TRAY[resolveLang(cfg.lang)];
+  const t = Object.fromEntries(Object.entries({ ...labels, ...(MAC && labels.mac) }).map(([key, value]) =>
     [key, typeof value === 'string' && watched.id !== 'claude' ? value.replaceAll('Claude Code', watched.name) : value]));
 
   const screens = displays();
@@ -417,6 +534,18 @@ function rebuildTray() {
     { label: t.jealous, type: 'checkbox', checked: cfg.jealous !== false, click: (item) => updateConfig({ jealous: item.checked }) },
     { label: t.pcReact, type: 'checkbox', checked: cfg.pcReact !== false, click: (item) => updateConfig({ pcReact: item.checked }) },
     {
+      label: t.musicOn,
+      submenu: [['youtube', t.musicYoutube], ['spotify', t.musicSpotify]].map(([musicApp, label]) => ({
+        label, type: 'radio', checked: (cfg.musicApp || 'youtube') === musicApp, click: () => updateConfig({ musicApp }),
+      })),
+    },
+    {
+      label: t.games,
+      submenu: [['hide', t.gameHide], ['chip', t.gameChip]].map(([gameMode, label]) => ({
+        label, type: 'radio', checked: (cfg.gameMode || 'hide') === gameMode, click: () => updateConfig({ gameMode }),
+      })),
+    },
+    {
       // she asks first (what she'll send where), then turns it on herself
       label: t.lookAuto, type: 'checkbox', checked: Boolean(cfg.watchScreen),
       click: (item) => {
@@ -453,7 +582,8 @@ function rebuildTray() {
         label, type: 'radio', checked: cfg.motion === motion, click: () => updateConfig({ motion, motionAsked: true }),
       })),
     },
-    {
+    // for PCs that show her window black (NVIDIA cards): not a thing on a Mac
+    ...(MAC ? [] : [{
       label: t.display,
       // only read when she starts: she restarts in the mode picked
       submenu: [['auto', t.displayAuto], ['gl', t.displayGl], ['software', t.displaySoftware]].map(([render, label]) => ({
@@ -465,7 +595,7 @@ function rebuildTray() {
           app.exit(0);
         },
       })),
-    },
+    }]),
     {
       label: t.lang,
       submenu: [[t.auto, 'auto'], ...LANGS.map((lang) => [TRAY[lang].name, lang])].map(([label, lang]) => ({
@@ -475,8 +605,8 @@ function rebuildTray() {
     {
       label: t.startup,
       type: 'checkbox',
-      checked: app.getLoginItemSettings(loginItemOptions()).openAtLogin,
-      click: (item) => app.setLoginItemSettings({ ...loginItemOptions(), openAtLogin: item.checked }),
+      checked: openAtLogin(),
+      click: (item) => openAtLogin(item.checked),
     },
     // her hooks, while she watches Claude Code
     ...(cfg.claude ? [
@@ -494,9 +624,41 @@ function rebuildTray() {
 }
 
 // Run from a clone (`npm start`), electron.exe alone would open the default Electron app at login:
-// it needs the project folder as argument.
+// it needs the project folder as argument. macOS can't pass one to a login item: from a clone, a
+// launch agent of yours (~/Library/LaunchAgents) starts her instead.
 function loginItemOptions() {
   return app.isPackaged ? {} : { path: process.execPath, args: [ROOT] };
+}
+
+const devAgent = () => path.join(app.getPath('home'), 'Library', 'LaunchAgents', 'capri.desktop.dev.plist');
+
+function devAgentPlist() {
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>capri.desktop.dev</string>
+  <key>ProgramArguments</key><array><string>${esc(process.execPath)}</string><string>${esc(ROOT)}</string></array>
+  <key>RunAtLoad</key><true/>
+</dict>
+</plist>
+`;
+}
+
+// Whether she starts when you log in; with `on`, sets it first.
+function openAtLogin(on) {
+  if (MAC && !app.isPackaged) {
+    if (on === true) {
+      fs.mkdirSync(path.dirname(devAgent()), { recursive: true });
+      fs.writeFileSync(devAgent(), devAgentPlist());
+    } else if (on === false) {
+      fs.rmSync(devAgent(), { force: true });
+    }
+    return fs.existsSync(devAgent());
+  }
+  if (typeof on === 'boolean') app.setLoginItemSettings({ ...loginItemOptions(), openAtLogin: on });
+  return app.getLoginItemSettings(loginItemOptions()).openAtLogin;
 }
 
 // From the tray, she says how it went; from her welcome panel (quiet), the panel does.
@@ -599,19 +761,53 @@ async function chatWithFallback(cfg, messages, send, signal, streamed) {
   }
 }
 
+// macOS lets an app see the screen only once you've allowed it (Privacy & Security › Screen & System
+// Audio Recording). The first time, macOS asks you itself; she says what to allow, with a button to it.
+async function screenAllowed() {
+  if (!MAC || systemPreferences.getMediaAccessStatus('screen') === 'granted') return true;
+  if (!config.load().screenAsked) {
+    config.save({ screenAsked: true });
+    await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1, height: 1 } }).catch(() => null);
+  }
+  return false;
+}
+
 // She looks at your screen (look.js): a picture of the screen she's on, kept here in memory a moment
 // for her AI to look at, never written anywhere. 1280 px wide at most: enough to read, light to send.
 const snaps = new Map(); // id -> the picture, base64 JPEG
+// The window in front, as sharp as the screen has it (1600 px on its long side at most): what you're
+// looking at, readable, rather than the whole screen squeezed small. The whole screen when there's no
+// window in front (the desktop).
+const SNAP_MAX = 1600;
 async function snapScreen() {
   const d = targetDisplay();
   const k = d.scaleFactor || 1;
-  const fit = Math.min(1, 1280 / (d.bounds.width * k));
-  const size = { width: Math.round(d.bounds.width * k * fit), height: Math.round(d.bounds.height * k * fit) };
+  const size = { width: Math.round(d.bounds.width * k), height: Math.round(d.bounds.height * k) };
   const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: size });
   const src = sources.find((s) => s.display_id === String(d.id)) || sources[0];
   if (!src || src.thumbnail.isEmpty()) throw new Error('no picture of the screen');
-  return src.thumbnail.toJPEG(72).toString('base64');
+  let picture = src.thumbnail;
+  const o = overlay.getBounds();
+  const win = lastWindows?.wins?.find((w) => w.id === lastWindows.fg);
+  if (win) {
+    const px = picture.getSize().width / d.bounds.width; // the picture's pixels per point
+    const x = Math.max(0, Math.round((win.x + o.x - d.bounds.x) * px));
+    const y = Math.max(0, Math.round((win.y + o.y - d.bounds.y) * px));
+    const width = Math.min(picture.getSize().width - x, Math.round(win.w * px));
+    const height = Math.min(picture.getSize().height - y, Math.round(win.h * px));
+    if (width > 100 && height > 100) picture = picture.crop({ x, y, width, height });
+  }
+  const { width, height } = picture.getSize();
+  const fit = Math.min(1, SNAP_MAX / Math.max(width, height));
+  if (fit < 1) picture = picture.resize({ width: Math.round(width * fit), height: Math.round(height * fit), quality: 'best' });
+  return picture.toJPEG(80).toString('base64');
 }
+
+// What's on the picture, plainly, before she says anything about it: a small model asked to look and
+// to be her at once does both badly (vague lines that could be about any screen).
+const LOOK_FACTS = 'This is a screenshot of the window the user is looking at. Say what it is (the app or website) and what it shows, '
+  + 'with the titles, names or words that matter, in 3 to 5 short factual lines. Leave out a small figure with a big red mane '
+  + '(an overlay, not part of the window). No opinions, no greeting.';
 
 // What her AI says about that picture, as her (`persona`), asked `prompt`. With a code when it can't:
 // 'noai' (nothing to ask), 'novision' (that model can't look at pictures).
@@ -625,15 +821,18 @@ async function sayAboutSnap({ id, persona, prompt, history = [] }) {
   if (!model) return { ok: false, code: 'noai' };
   if (cfg.provider === 'claude') return { ok: false, code: 'novision', model: 'Claude Code' };
   if (cfg.provider === 'ollama' && !(await ollama.canSee(model))) return { ok: false, code: 'novision', model };
-  const user = cfg.provider === 'ollama'
-    ? { role: 'user', content: prompt, images: [image] }
-    : { role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } }] };
+  const look = cfg.provider === 'ollama'
+    ? { role: 'user', content: LOOK_FACTS, images: [image] }
+    : { role: 'user', content: [{ type: 'text', text: LOOK_FACTS }, { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } }] };
   // asked in her chat: the conversation so far comes before it (text only)
   const before = (Array.isArray(history) ? history : []).filter((m) => typeof m?.content === 'string' && ['user', 'assistant'].includes(m.role));
-  const messages = [{ role: 'system', content: persona }, ...before, user];
+  const ask = (messages) => llm.chat(cfg.provider, llmConfig(cfg), { model, messages }, () => {}, AbortSignal.timeout(120000));
   for (let attempt = 0; ; attempt++) {
     try {
-      const text = await llm.chat(cfg.provider, llmConfig(cfg), { model, messages }, () => {}, AbortSignal.timeout(120000));
+      // first what's there, then her, about that
+      const facts = (await ask([look])).trim();
+      const seen = { role: 'user', content: `You just looked at the user's screen. What you saw there:\n${facts}\n\n${prompt}` };
+      const text = await ask([{ role: 'system', content: persona }, ...before, seen]);
       return { ok: true, text, model };
     } catch (err) {
       if (err.code === 'busy' && attempt === 0) {
@@ -666,7 +865,9 @@ async function pickClaudeFolder() {
 }
 
 function createTray() {
-  const icon = nativeImage.createFromPath(path.join(ROOT, 'assets', 'icons', 'tray.png'));
+  // its 32 px drawn at 16 points in the Mac's menu bar (as sharp on a Retina screen), not 32
+  const file = path.join(ROOT, 'assets', 'icons', 'tray.png');
+  const icon = MAC ? nativeImage.createFromBuffer(fs.readFileSync(file), { scaleFactor: 2 }) : nativeImage.createFromPath(file);
   tray = new Tray(icon);
   tray.setToolTip('Capri');
   tray.on('click', () => sendCommand('status'));
@@ -706,7 +907,7 @@ function registerIpc() {
   ipcMain.handle('config:set', (_e, patch) => updateConfig(patch));
   ipcMain.handle('demo:window', (_e, open) => demoWindow(open));
   // right-clicking her: the same menu as the tray icon (which Windows often hides behind the ^ by the clock)
-  ipcMain.on('menu:open', () => trayMenu?.popup({ window: overlay }));
+  ipcMain.on('menu:open', () => trayMenu?.popup({ window: overlay, callback: () => handBack() }));
   // her welcome panel's buttons
   ipcMain.handle('hooks:install', () => runHooks('install', { quiet: true }));
   ipcMain.handle('claude:found', () => fs.existsSync(path.dirname(activeHooks().status().file))); // Claude Code keeps its settings there
@@ -747,6 +948,7 @@ function registerIpc() {
   ipcMain.on('chat:stop', (_e, id) => chats.get(id)?.abort());
   // she looks at your screen (look.js): the picture first, then what her AI says about it
   ipcMain.handle('look:snap', async () => {
+    if (!(await screenAllowed())) return { ok: false, code: 'screen' };
     try {
       const id = randomUUID();
       snaps.set(id, await snapScreen());
@@ -843,7 +1045,12 @@ function registerIpc() {
   // your files (files.js): a search, opening what it found, a screenshot, a search on the web
   ipcMain.handle('files:search', (_e, query) => files.search(query).catch(() => []));
   ipcMain.handle('files:open', (_e, { file, reveal }) => files.open(String(file), { reveal: Boolean(reveal) }).then(() => true, () => false));
-  ipcMain.handle('files:screenshot', () => files.screenshot(targetDisplay()).catch(() => null));
+  ipcMain.handle('files:screenshot', async () => {
+    if (!(await screenAllowed())) return { need: 'screen' };
+    return files.screenshot(targetDisplay()).catch(() => null);
+  });
+  // macOS: System Settings on the page that lets her do something (Screen Recording, Accessibility)
+  ipcMain.on('mac:settings', (_e, page) => MAC && mac.SETTINGS[page] && shell.openExternal(mac.SETTINGS[page]));
   ipcMain.handle('web:search', (_e, query) => {
     const q = String(query || '').trim().slice(0, 300);
     if (!q) return false;
@@ -854,11 +1061,39 @@ function registerIpc() {
   ipcMain.handle('apps:music', (_e, query) => launch.music(query).catch(() => false));
   ipcMain.handle('apps:site', (_e, address) => launch.site(address).catch(() => false));
   // typing to her: the overlay takes the keyboard while the chat is open, and gives it back after
+  // On a Mac only the app in front gets the keyboard: she comes in front, then hands it back to the
+  // app you were in.
   ipcMain.on('overlay:focus', (_e, on) => {
     if (!overlay) return;
     overlay.setFocusable(Boolean(on));
-    if (on) overlay.focus();
-    else overlay.blur();
+    typing = Boolean(on);
+    if (on) {
+      if (MAC) app.focus({ steal: true });
+      overlay.focus();
+    } else {
+      overlay.blur();
+      handBack();
+    }
+  });
+  // a click on her (a Mac brings her app forward with it): done, the app you were in gets it back
+  ipcMain.on('overlay:released', () => handBack());
+  // a game in front and her menu says she goes (pc.js): her window hidden, nothing drawn, until it's over
+  ipcMain.on('overlay:away', (_e, on) => {
+    if (!overlay || overlay.isDestroyed() || away === Boolean(on)) return;
+    away = Boolean(on);
+    if (away) {
+      overlay.hide();
+      return;
+    }
+    // back on the desktop you're on now (on a Mac her window may be on the game's)
+    const all = (on) => MAC && overlay.setVisibleOnAllWorkspaces(on, { visibleOnFullScreen: true, skipTransformProcessType: true });
+    all(true);
+    overlay.showInactive();
+    setTimeout(() => {
+      if (overlay.isDestroyed()) return;
+      all(false);
+      if (MAC) overlay.setHiddenInMissionControl(true);
+    }, 250);
   });
   // her report card's copy button: a picture of that part of the overlay, on the clipboard
   ipcMain.handle('panel:copy', async (_e, rect) => {
@@ -868,14 +1103,17 @@ function registerIpc() {
     await clipboard.write([new ClipboardItem({ 'image/png': png })]);
     return true;
   });
-  // her guide: where her tray icon is (it lives in the taskbar, off the overlay, hence overlay
-  // coordinates past its edge), and the corner by the clock in case Windows hid it behind the ^
+  // her guide: where her tray icon is (it lives in the taskbar, or the Mac's menu bar, off the
+  // overlay, hence overlay coordinates past its edge), and the corner by the clock in case Windows
+  // hid it behind the ^ (or the menu bar, out of room, behind the notch)
   ipcMain.handle('guide:tray', () => {
     const o = overlay.getBounds();
-    const d = targetDisplay().bounds;
+    const { bounds: d, workArea } = targetDisplay();
     const b = tray?.getBounds();
     const icon = b && b.width > 0 ? { x: b.x - o.x, y: b.y - o.y, w: b.width, h: b.height } : null;
-    const corner = { x: d.x + d.width - 150 - o.x, y: d.y + d.height - 44 - o.y, w: 140, h: 40 };
+    const corner = MAC
+      ? { x: d.x + d.width - 150 - o.x, y: d.y - o.y, w: 140, h: Math.max(24, workArea.y - d.y) }
+      : { x: d.x + d.width - 150 - o.x, y: d.y + d.height - 44 - o.y, w: 140, h: 40 };
     return { icon, corner };
   });
   // her guide: Claude Code's folder (~/.claude) in Explorer, its settings file selected
@@ -1017,7 +1255,25 @@ function applyRender() {
   if (DEV) app.whenReady().then(() => setTimeout(() => console.log('[capri] display:', render, JSON.stringify(app.getGPUFeatureStatus())), 4000));
 }
 
+// Started from Downloads or a disk image, macOS runs an app from a temporary copy: her hooks would
+// point at a folder gone tomorrow. She offers to move herself to Applications first (and restarts).
+async function offerApplications() {
+  if (!MAC || !app.isPackaged || app.isInApplicationsFolder()) return;
+  const t = TRAY[resolveLang(config.load().lang)].mac;
+  app.focus({ steal: true });
+  const { response } = await dialog.showMessageBox({
+    type: 'question', message: t.move, detail: t.moveHow, buttons: [t.moveBtn, t.moveLater], defaultId: 0, cancelId: 1,
+  });
+  if (response !== 0) return;
+  try {
+    app.moveToApplicationsFolder();
+  } catch (err) {
+    console.error('[capri] could not move to Applications:', err.message);
+  }
+}
+
 function main() {
+  mac.fixPath(); // her programs (claude, ollama, node) found even when started from Finder
   applyRender();
   if (!app.requestSingleInstanceLock()) {
     app.quit();
@@ -1026,7 +1282,9 @@ function main() {
   app.on('second-instance', () => sendCommand('status'));
   if (process.platform === 'win32') app.setAppUserModelId('capri.desktop');
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
+    if (MAC) app.dock?.hide(); // she lives on the desktop and in the menu bar, not in the Dock
+    await offerApplications();
     if (!['codex', 'claude'].includes(config.load().assistant)) config.save({ assistant: activeAssistant().id });
     serveProtocol();
     registerIpc();
@@ -1037,6 +1295,13 @@ function main() {
       onUpdate: (data) => {
         // a click on the taskbar brings it up over her: sitting on it, her legs would vanish behind it
         if (data.taskbar && !lastWindows?.taskbar && config.load().rest === 'taskbar') raiseOverlay();
+        followSpace(data);
+        if (data.pid && data.pid !== process.pid) otherApp = data.pid;
+        const ais = titleAis(data);
+        if (ais.length) data = { ...data, ai: [...new Set([...data.ai, ...ais])] };
+        seenAi = data.ai;
+        if (tab.fg === data.fg) data = { ...data, ai: withTab(data.ai) };
+        else tab = { fg: null, ai: [] };
         lastWindows = data;
         overlay?.webContents.send('windows:update', data);
       },
@@ -1061,6 +1326,7 @@ function main() {
     screen.on('display-metrics-changed', screensChanged);
     screen.on('display-added', screensChanged);
     screen.on('display-removed', screensChanged);
+    if (MAC) setInterval(checkTab, 3000); // the tab in front, while a browser is (checkTab)
     // after sleep or a locked screen, once Windows has settled
     powerMonitor.on('resume', () => setTimeout(rearmOverlay, 2000));
     powerMonitor.on('unlock-screen', () => setTimeout(rearmOverlay, 1000));

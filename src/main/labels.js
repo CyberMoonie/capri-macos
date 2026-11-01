@@ -24,6 +24,13 @@ const TRAY = {
     lookNow: 'Regarde mon écran', lookAuto: 'Regarder mon écran de temps en temps',
     pcReact: 'Réagir à mon PC',
     cloudFree: 'gratuit, en ligne', cloudSignin: 'Me connecter à Ollama (modèles cloud gratuits)…',
+    musicOn: 'La musique sur', musicYoutube: 'YouTube', musicSpotify: 'Spotify',
+    games: 'Pendant les jeux', gameHide: 'Disparaître jusqu’à la fin de la partie', gameChip: 'Rester petite dans son coin',
+    // on a Mac, in place of the ones above
+    mac: {
+      startup: 'Ouvrir à la connexion', motionAuto: 'Comme macOS', restTaskbar: 'Sur le Dock, quand il s’affiche', pcReact: 'Réagir à mon Mac',
+      move: 'Me mettre dans Applications ?', moveHow: 'Je tourne depuis ce dossier-là : mes hooks pour Claude Code ne tiendraient pas. Dans Applications, ils restent branchés.', moveBtn: 'Déplacer', moveLater: 'Plus tard',
+    },
   },
   en: {
     name: 'English',
@@ -45,6 +52,13 @@ const TRAY = {
     lookNow: 'Look at my screen', lookAuto: 'Look at my screen now and then',
     pcReact: 'React to my PC',
     cloudFree: 'free, online', cloudSignin: 'Sign in to Ollama (free cloud models)…',
+    musicOn: 'Music on', musicYoutube: 'YouTube', musicSpotify: 'Spotify',
+    games: 'During games', gameHide: 'Disappear until I stop playing', gameChip: 'Stay small in her corner',
+    // on a Mac, in place of the ones above
+    mac: {
+      startup: 'Open at login', motionAuto: 'Like macOS', restTaskbar: 'On the Dock, when it shows', pcReact: 'React to my Mac',
+      move: 'Move me to Applications?', moveHow: 'I’m running from this folder, so my Claude Code hooks wouldn’t hold. In Applications, they stay plugged in.', moveBtn: 'Move', moveLater: 'Later',
+    },
   },
   es: {
     name: 'Español',
@@ -66,6 +80,13 @@ const TRAY = {
     lookNow: 'Mira mi pantalla', lookAuto: 'Mirar mi pantalla de vez en cuando',
     pcReact: 'Reaccionar a mi PC',
     cloudFree: 'gratis, en línea', cloudSignin: 'Conectarme a Ollama (modelos en la nube gratis)…',
+    musicOn: 'Música en', musicYoutube: 'YouTube', musicSpotify: 'Spotify',
+    games: 'Durante los juegos', gameHide: 'Desaparecer hasta que deje de jugar', gameChip: 'Quedarse pequeña en su rincón',
+    // on a Mac, in place of the ones above
+    mac: {
+      startup: 'Abrir al iniciar sesión', motionAuto: 'Como macOS', restTaskbar: 'En el Dock, cuando aparece', pcReact: 'Reaccionar a mi Mac',
+      move: '¿Me muevo a Aplicaciones?', moveHow: 'Estoy funcionando desde esta carpeta, así que mis hooks de Claude Code no aguantarían. En Aplicaciones se quedan conectados.', moveBtn: 'Mover', moveLater: 'Más tarde',
+    },
   },
   pt: {
     name: 'Português (Brasil)',
@@ -87,6 +108,13 @@ const TRAY = {
     lookNow: 'Olha minha tela', lookAuto: 'Olhar minha tela de vez em quando',
     pcReact: 'Reagir ao meu PC',
     cloudFree: 'grátis, online', cloudSignin: 'Entrar no Ollama (modelos na nuvem grátis)…',
+    musicOn: 'Música no', musicYoutube: 'YouTube', musicSpotify: 'Spotify',
+    games: 'Durante os jogos', gameHide: 'Sumir até eu parar de jogar', gameChip: 'Ficar pequena no canto dela',
+    // on a Mac, in place of the ones above
+    mac: {
+      startup: 'Abrir ao iniciar sessão', motionAuto: 'Como o macOS', restTaskbar: 'No Dock, quando ele aparece', pcReact: 'Reagir ao meu Mac',
+      move: 'Me mover para Aplicativos?', moveHow: 'Estou rodando desta pasta, então meus hooks do Claude Code não iam durar. Em Aplicativos, eles continuam conectados.', moveBtn: 'Mover', moveLater: 'Depois',
+    },
   },
   ru: {
     name: 'Русский',
@@ -108,6 +136,13 @@ const TRAY = {
     lookNow: 'Посмотри на мой экран', lookAuto: 'Иногда смотреть на мой экран',
     pcReact: 'Реагировать на мой ПК',
     cloudFree: 'бесплатно, онлайн', cloudSignin: 'Войти в Ollama (бесплатные облачные модели)…',
+    musicOn: 'Музыка в', musicYoutube: 'YouTube', musicSpotify: 'Spotify',
+    games: 'Во время игр', gameHide: 'Исчезать, пока я играю', gameChip: 'Оставаться маленькой в углу',
+    // on a Mac, in place of the ones above
+    mac: {
+      startup: 'Открывать при входе', motionAuto: 'Как в macOS', restTaskbar: 'На Dock, когда он виден', pcReact: 'Реагировать на мой Mac',
+      move: 'Перенести меня в «Программы»?', moveHow: 'Я запущена из этой папки, и мои хуки для Claude Code не удержатся. В «Программах» они останутся подключены.', moveBtn: 'Перенести', moveLater: 'Позже',
+    },
   },
 };
 
