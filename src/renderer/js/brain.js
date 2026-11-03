@@ -267,6 +267,22 @@ export class Brain {
     if (evt.message) this.say('info', evt.message, s, { hold: 5000 });
   }
 
+  // Another session of yours still at work once her victory's over: a moment for you to read her
+  // panel, then back to where she watches it (on the window in front, or her spot), not left in the
+  // middle of your screen. Holding up Claude's answer for you, she waits until you've read it.
+  backToWork(tries = 0) {
+    clearTimeout(this.backTimer);
+    this.backTimer = setTimeout(() => {
+      if (!this.busySessions.length || this.capri.mode !== 'work') return;
+      const reading = this.panel.current?.reply && this.panel.visible;
+      if (reading || !this.capri.free) {
+        if (tries < 90) this.backToWork(tries + 1); // a little move of hers, or you reading: a moment later
+        return;
+      }
+      this.capri.goToWork();
+    }, tries ? 1000 : 8000);
+  }
+
   async onStop(evt, s) {
     const wasWorking = s.working;
     s.working = false;
@@ -305,7 +321,7 @@ export class Brain {
     const bigJob = s.count >= 3 || (s.taskStart && Date.now() - s.taskStart > 20000);
     if (bigJob) await this.capri.teleport(this.capri.spot('stage'));
     // the panel comes in once she's back down from her victory pose
-    this.capri.celebrate({ onSpeak: () => done({ summary, hold: 14000 }) });
+    Promise.resolve(this.capri.celebrate({ onSpeak: () => done({ summary, hold: 14000 }) })).then(() => this.backToWork());
     // a long one: she'll send the red light up to the satellite once it's all quiet
     if ((s.taskStart && Date.now() - s.taskStart >= LONG_JOB_MS) || s.count >= LONG_JOB_ACTIONS) this.capri.earnUplink();
   }
