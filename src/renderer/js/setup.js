@@ -3,11 +3,27 @@
 // no account (Pollinations), or with a key you paste in her panel. And Claude Code or Codex for
 // free, run through Ollama. Each step is a panel of her guide (guide.js).
 
-import { fmt } from './util.js';
+import { fmt } from "./util.js";
 
 // the services that take a key, in the order she offers them (the first two have a free tier)
-const KEYED = ['groq', 'gemini', 'openrouter', 'openai', 'mistral', 'deepseek'];
-const NAMES = { groq: 'Groq', gemini: 'Gemini', openrouter: 'OpenRouter', openai: 'OpenAI', mistral: 'Mistral', deepseek: 'DeepSeek' };
+const KEYED = [
+  "groq",
+  "gemini",
+  "openrouter",
+  "openai",
+  "mistral",
+  "deepseek",
+  "deepinfra",
+];
+const NAMES = {
+  groq: "Groq",
+  gemini: "Gemini",
+  openrouter: "OpenRouter",
+  deepinfra: "Deepinfra",
+  openai: "OpenAI",
+  mistral: "Mistral",
+  deepseek: "DeepSeek",
+};
 const ROOMY = 12 * 2 ** 30; // enough memory for the bigger model
 
 export class Setup {
@@ -42,7 +58,7 @@ export class Setup {
     await this.guide.scene(async () => {
       const { provider } = await this.host.getConfig();
       if (KEYED.includes(provider)) ready = await this.paste(provider);
-      else if (provider === 'custom') ready = await this.address();
+      else if (provider === "custom") ready = await this.address();
       else ready = await this.pickKeyed();
     });
     if (ready) this.onReady?.();
@@ -57,7 +73,8 @@ export class Setup {
       if (!name) return;
       const res = await this.pull(name);
       if (res.ok) ready = await this.done();
-      else if (res.error !== 'stopped') await this.fail(this.t.pullFailed, res.error);
+      else if (res.error !== "stopped")
+        await this.fail(this.t.pullFailed, res.error);
     });
     if (ready) this.onReady?.();
   }
@@ -72,32 +89,36 @@ export class Setup {
   // Who answers her: why she can't talk yet if she knows, then the choice. True once she can talk.
   async choose(status) {
     const t = this.t;
-    let why = '';
+    let why = "";
     if (status && !status.ok) {
-      if (status.code === 'nokey') return this.paste(status.provider);
-      if (status.code === 'nourl') return this.address();
-      if (!status.provider || status.provider === 'ollama') {
+      if (status.code === "nokey") return this.paste(status.provider);
+      if (status.code === "nourl") return this.address();
+      if (!status.provider || status.provider === "ollama") {
         const state = await this.host.ollamaState();
-        why = !state.installed ? t.why.noOllama : !state.running ? t.why.asleep : t.why.noModel;
+        why = !state.installed
+          ? t.why.noOllama
+          : !state.running
+            ? t.why.asleep
+            : t.why.noModel;
       } else {
         why = `${t.failed} ${status.error}`;
       }
     }
-    this.capri.perform('curious', this.capri.towardCenter());
+    this.capri.perform("curious", this.capri.towardCenter());
     const id = await this.guide.ask({
-      face: 'smug',
+      face: "smug",
       line: t.who,
-      quote: [why, t.whoHow].filter(Boolean).join('\n'),
+      quote: [why, t.whoHow].filter(Boolean).join("\n"),
       actions: [
-        { id: 'local', label: t.local, primary: true },
-        { id: 'online', label: t.online },
-        { id: 'key', label: t.key },
-        { id: 'later', label: t.later },
+        { id: "local", label: t.local, primary: true },
+        { id: "online", label: t.online },
+        { id: "key", label: t.key },
+        { id: "later", label: t.later },
       ],
     });
-    if (id === 'local') return this.ollama();
-    if (id === 'online') return this.use('pollinations');
-    if (id === 'key') return this.pickKeyed();
+    if (id === "local") return this.ollama();
+    if (id === "online") return this.use("pollinations");
+    if (id === "key") return this.pickKeyed();
     return false;
   }
 
@@ -106,14 +127,16 @@ export class Setup {
     if (!(await this.ollamaUp())) return false;
     const state = await this.host.ollamaState();
     if (state.models?.length) {
-      const res = await this.host.useProvider({ provider: 'ollama' });
+      const res = await this.host.useProvider({ provider: "ollama" });
       return res.ok ? this.done() : this.fail(this.t.failed, res.error);
     }
     const name = await this.pickModel();
     if (!name) return false;
     const res = await this.pull(name);
     if (res.ok) return this.done();
-    return res.error === 'stopped' ? false : this.fail(this.t.pullFailed, res.error);
+    return res.error === "stopped"
+      ? false
+      : this.fail(this.t.pullFailed, res.error);
   }
 
   // Ollama installed (its app from ollama.com, on your click) and awake. True once it answers.
@@ -123,15 +146,21 @@ export class Setup {
     if (state.running) return true;
     if (!state.installed) {
       const id = await this.guide.ask({
-        face: 'look', line: t.install, quote: t.installHow,
-        actions: [{ id: 'install', label: t.installBtn, primary: true }, { id: 'site', label: t.site }, { id: 'later', label: t.later }],
+        face: "look",
+        line: t.install,
+        quote: t.installHow,
+        actions: [
+          { id: "install", label: t.installBtn, primary: true },
+          { id: "site", label: t.site },
+          { id: "later", label: t.later },
+        ],
       });
-      if (id === 'site') this.host.openOllama();
-      if (id !== 'install') return false;
+      if (id === "site") this.host.openOllama();
+      if (id !== "install") return false;
       this.working(t.installing, t.installingHow);
       const res = await this.host.installOllama();
       state = await this.host.ollamaState();
-      if (!state.installed) return this.fail(t.installFailed, res.error || '');
+      if (!state.installed) return this.fail(t.installFailed, res.error || "");
       if (state.running) return true;
     }
     this.working(t.waking, t.wakingHow);
@@ -147,13 +176,20 @@ export class Setup {
     const models = info.ram >= ROOMY ? info.models : [...info.models].reverse();
     const cloud = info.cloud || [];
     const id = await this.guide.ask({
-      face: 'look',
+      face: "look",
       line,
       quote: cloud.length ? `${t.modelHow}\n${t.cloudHow}` : t.modelHow,
       actions: [
-        ...models.map((m, i) => ({ id: m.name, label: `${m.name} · ${this.size(m.bytes)}`, primary: i === 0 })),
-        ...cloud.map((name) => ({ id: name, label: `${name.replace(/:cloud$/, '')} · ${t.cloudFree}` })),
-        { id: 'later', label: t.later },
+        ...models.map((m, i) => ({
+          id: m.name,
+          label: `${m.name} · ${this.size(m.bytes)}`,
+          primary: i === 0,
+        })),
+        ...cloud.map((name) => ({
+          id: name,
+          label: `${name.replace(/:cloud$/, "")} · ${t.cloudFree}`,
+        })),
+        { id: "later", label: t.later },
       ],
     });
     return models.some((m) => m.name === id) || cloud.includes(id) ? id : null;
@@ -164,9 +200,15 @@ export class Setup {
     const t = this.t;
     this.pulling = true;
     this.panel.say({
-      kind: 'work', face: 'calm', guide: true, hold: null, token: Symbol('setup'),
-      line: fmt(t.pulling, { model: name }), quote: t.pullStart, progress: 0,
-      actions: [{ id: 'cancel', label: t.cancel }],
+      kind: "work",
+      face: "calm",
+      guide: true,
+      hold: null,
+      token: Symbol("setup"),
+      line: fmt(t.pulling, { model: name }),
+      quote: t.pullStart,
+      progress: 0,
+      actions: [{ id: "cancel", label: t.cancel }],
       onAction: () => this.host.cancelSetup(),
     });
     try {
@@ -177,10 +219,22 @@ export class Setup {
   }
 
   progress(p) {
-    if (p.kind !== 'pull' || !this.pulling || !p.total || this.panel.current?.kind !== 'work') return;
+    if (
+      p.kind !== "pull" ||
+      !this.pulling ||
+      !p.total ||
+      this.panel.current?.kind !== "work"
+    )
+      return;
     const k = p.completed / p.total;
     this.panel.setProgress(k);
-    this.panel.setQuote(fmt(this.t.progress, { done: this.size(p.completed), total: this.size(p.total), percent: Math.floor(k * 100) }));
+    this.panel.setQuote(
+      fmt(this.t.progress, {
+        done: this.size(p.completed),
+        total: this.size(p.total),
+        percent: Math.floor(k * 100),
+      }),
+    );
   }
 
   // A service with no key needed (Pollinations): tried, then ready.
@@ -193,30 +247,36 @@ export class Setup {
   async pickKeyed() {
     const t = this.t;
     const id = await this.guide.ask({
-      face: 'smug',
+      face: "smug",
       line: t.which,
       quote: t.whichHow,
-      actions: [...KEYED.map((p, i) => ({ id: p, label: NAMES[p], primary: i === 0 })), { id: 'back', label: t.back }],
+      actions: [
+        ...KEYED.map((p, i) => ({ id: p, label: NAMES[p], primary: i === 0 })),
+        { id: "back", label: t.back },
+      ],
     });
-    if (id === 'back') return this.choose(null);
+    if (id === "back") return this.choose(null);
     return KEYED.includes(id) ? this.paste(id) : false;
   }
 
   // Her panel with a line to paste the key into (hidden as you type), and the page to get one.
-  async paste(provider, error = '') {
+  async paste(provider, error = "") {
     const t = this.t;
     const got = await this.guide.askText({
-      face: error ? 'wide' : 'look',
+      face: error ? "wide" : "look",
       line: fmt(t.paste, { name: NAMES[provider] || provider }),
       quote: error ? `${t.keyBad} ${error}` : t.pasteHow,
       secret: true,
       placeholder: t.placeholder,
       tag: t.keyTag,
       note: t.keyNote,
-      actions: [{ id: 'page', label: t.where }, { id: 'other', label: t.other }],
-      onAction: (id) => id === 'page' && (this.host.keyPage(provider), true),
+      actions: [
+        { id: "page", label: t.where },
+        { id: "other", label: t.other },
+      ],
+      onAction: (id) => id === "page" && (this.host.keyPage(provider), true),
     });
-    if (got?.action === 'other') return this.choose(null);
+    if (got?.action === "other") return this.choose(null);
     if (!got?.text) return false;
     this.working(t.checking);
     const res = await this.host.useProvider({ provider, key: got.text });
@@ -224,34 +284,42 @@ export class Setup {
   }
 
   // The address of an OpenAI-compatible server of your own (LM Studio, llama.cpp…).
-  async address(error = '') {
+  async address(error = "") {
     const t = this.t;
     const got = await this.guide.askText({
-      face: error ? 'wide' : 'look',
+      face: error ? "wide" : "look",
       line: t.address,
       quote: error ? `${t.failed} ${error}` : t.addressHow,
-      placeholder: 'http://127.0.0.1:1234/v1',
-      tag: 'URL',
+      placeholder: "http://127.0.0.1:1234/v1",
+      tag: "URL",
       note: t.addressNote,
-      actions: [{ id: 'other', label: t.other }],
+      actions: [{ id: "other", label: t.other }],
     });
-    if (got?.action === 'other') return this.choose(null);
+    if (got?.action === "other") return this.choose(null);
     if (!got?.text) return false;
     this.working(t.checking);
-    const res = await this.host.useProvider({ provider: 'custom', url: got.text });
+    const res = await this.host.useProvider({
+      provider: "custom",
+      url: got.text,
+    });
     return res.ok ? this.done() : this.address(res.error);
   }
 
   // Claude Code or Codex through Ollama: her hooks in first (so she sees it), Ollama up, then its window.
   async freeNow() {
     const t = this.t;
-    const integration = this.brain.assistant === 'codex' ? 'codex' : 'claude';
-    const name = integration === 'codex' ? 'Codex' : 'Claude Code';
+    const integration = this.brain.assistant === "codex" ? "codex" : "claude";
+    const name = integration === "codex" ? "Codex" : "Claude Code";
     const id = await this.guide.ask({
-      face: 'smug', line: fmt(t.freeLine, { name }), quote: fmt(t.freeHow, { name }),
-      actions: [{ id: 'go', label: t.freeBtn, primary: true }, { id: 'later', label: t.later }],
+      face: "smug",
+      line: fmt(t.freeLine, { name }),
+      quote: fmt(t.freeHow, { name }),
+      actions: [
+        { id: "go", label: t.freeBtn, primary: true },
+        { id: "later", label: t.later },
+      ],
     });
-    if (id !== 'go') return false;
+    if (id !== "go") return false;
     const hooks = await this.host.hooksStatus();
     if (!hooks.installed) {
       const res = await this.host.installHooks();
@@ -259,41 +327,69 @@ export class Setup {
     }
     if (!(await this.ollamaUp())) return false;
     const res = await this.host.launchThroughOllama(integration);
-    if (!res.ok) return this.fail(t.failed, '');
-    this.voice.play('hello');
-    this.capri.perform('hop');
-    await this.guide.ask({ kind: 'done', face: 'look', line: t.freeOpened, quote: fmt(t.freeOpenedHow, { name }), actions: [{ id: 'ok', label: t.ok, primary: true }] });
+    if (!res.ok) return this.fail(t.failed, "");
+    this.voice.play("hello");
+    this.capri.perform("hop");
+    await this.guide.ask({
+      kind: "done",
+      face: "look",
+      line: t.freeOpened,
+      quote: fmt(t.freeOpenedHow, { name }),
+      actions: [{ id: "ok", label: t.ok, primary: true }],
+    });
     return true;
   }
 
   // ---------- panels ----------
 
   // While something runs: what she's doing, no buttons (the scene's end, or the next panel, takes it away).
-  working(line, quote = '') {
+  working(line, quote = "") {
     this.capri.pulse();
-    this.panel.say({ kind: 'work', face: 'calm', line, quote, guide: true, hold: null, token: Symbol('setup') });
+    this.panel.say({
+      kind: "work",
+      face: "calm",
+      line,
+      quote,
+      guide: true,
+      hold: null,
+      token: Symbol("setup"),
+    });
   }
 
   // She can talk: true if you want to now (her chat opens).
   async done() {
-    this.voice.play('hello');
-    this.capri.perform('hop');
+    this.voice.play("hello");
+    this.capri.perform("hop");
     const id = await this.guide.ask({
-      kind: 'done', face: 'laugh', line: this.t.ready, quote: this.t.readyHow,
-      actions: [{ id: 'talk', label: this.t.talk, primary: true }, { id: 'later', label: this.t.later }],
+      kind: "done",
+      face: "laugh",
+      line: this.t.ready,
+      quote: this.t.readyHow,
+      actions: [
+        { id: "talk", label: this.t.talk, primary: true },
+        { id: "later", label: this.t.later },
+      ],
     });
-    return id === 'talk';
+    return id === "talk";
   }
 
   async fail(line, quote) {
     this.capri.hurt();
-    await this.guide.ask({ kind: 'error', face: 'wide', line, quote, actions: [{ id: 'ok', label: this.t.ok, primary: true }] });
+    await this.guide.ask({
+      kind: "error",
+      face: "wide",
+      line,
+      quote,
+      actions: [{ id: "ok", label: this.t.ok, primary: true }],
+    });
     return false;
   }
 
   size(bytes) {
     const gb = bytes >= 1e9;
-    const n = new Intl.NumberFormat(this.brain.lang, { maximumFractionDigits: gb ? 1 : 0 }).format(gb ? bytes / 1e9 : bytes / 1e6);
+    const n = new Intl.NumberFormat(this.brain.lang, {
+      maximumFractionDigits: gb ? 1 : 0,
+    }).format(gb ? bytes / 1e9 : bytes / 1e6);
     return `${n} ${gb ? this.t.gb : this.t.mb}`;
   }
 }
